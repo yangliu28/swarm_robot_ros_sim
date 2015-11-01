@@ -1,5 +1,5 @@
 # swarm_robot
-A swarm robot simulation for ROS Indigo to be used with Gazebo.
+A swarm robot simulation environment for ROS Indigo to be used with Gazebo.
 
 ## What's inside
 
