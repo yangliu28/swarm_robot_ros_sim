@@ -17,7 +17,7 @@ One package will be the testing field for different control algorithms.
 
 
 ## Motivation
-This project starts after investigating several swarm robot platforms like Kilobot, Jasmine, E-puck, Alice, and work with [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while, it would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. It's also for the purpose of learning various tools and programming in ROS.
+This project starts after investigating several swarm robot platforms like Kilobot, Jasmine, E-puck, Alice, and work on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while, it would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. It's also for the purpose of learning various tools and programming in ROS.
 
 ## Contributing
 
