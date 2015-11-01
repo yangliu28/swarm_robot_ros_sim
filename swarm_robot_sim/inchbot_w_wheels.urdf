@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<robot name="minimal_inchbot_w_wheels">
+<robot name="inchbot_w_wheels">
 
 
 <link name="body_link">
