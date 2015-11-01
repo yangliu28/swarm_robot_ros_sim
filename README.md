@@ -1,5 +1,12 @@
 # swarm_robot
-build a ROS environment for swarm robot simulation
+A swarm robot simulation for ROS Indigo to be used with Gazebo.
 
-## basics
-physical simulation environment for inchbot, including modularized actuation, communication and sensing capabilities for each inchbot
+## What's inside
+
+physical simulation environment for swarm robot like inchbot, including modularized actuation, communication and sensing capabilities for each inchbot
+
+
+
+## Test
+
+
