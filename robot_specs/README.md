@@ -1,4 +1,4 @@
-# swarm_robot_sim
+# robot_specs
 
 Your description goes here
 
