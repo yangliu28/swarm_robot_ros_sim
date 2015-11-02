@@ -1,4 +1,4 @@
-# swarm_robot_specs
+# swarm_robot_description
 
 Your description goes here
 

@@ -10,7 +10,7 @@
 
   <!-- we resume the logic in empty_world.launch -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find swarm_robot_sim)/initialize.world"/>
+    <arg name="world_name" value="$(find swarm_robot_description)/initialize.world"/>
     <arg name="debug" value="$(arg debug)" />
     <arg name="gui" value="$(arg gui)" />
     <arg name="paused" value="$(arg paused)"/>
@@ -19,7 +19,7 @@
   </include>
 
   <!-- load the URDF into the ROS Parameter Server, for visualization in Rviz -->
-  <param name="robot_description" command="cat '$(find swarm_robot_sim)/two_wheel_robot.urdf'"/>
+  <param name="robot_description" command="cat '$(find swarm_robot_description)/two_wheel_robot.urdf'"/>
 
   <!-- spawn multiple inchbot models in random positions -->
   <node pkg="gazebo_ros" type="spawn_model" name="urdf_spawner" respawn="false" output="screen"
