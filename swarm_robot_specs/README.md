@@ -1,4 +1,4 @@
-# robot_specs
+# swarm_robot_specs
 
 Your description goes here
 

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>robot_specs</name>
+  <name>swarm_robot_specs</name>
   <version>0.0.0</version>
-  <description>The robot_specs package</description>
+  <description>The swarm_robot_specs package</description>
   
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
