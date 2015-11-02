@@ -1,8 +1,8 @@
-# swarm_robot_simulation
+# swarm_robot_ros_sim
 A swarm robot simulation environment for ROS Indigo to be used with Gazebo.
 
 ## What's inside
-*swarm_robot_simulation* contains packages each of which works on a set of functionalities of this simulation.
+*swarm_robot_ros_sim* contains packages each of which works on a set of functionalities of this simulation.
 
 One package will describe the robot models, one simple model could be a two-wheel cubic robot, and also the gazebo environment setting files and launch files.
 
