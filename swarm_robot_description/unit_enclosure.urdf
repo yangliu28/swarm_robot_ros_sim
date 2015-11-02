@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+
+<!-- a simple square battlefield for the robot swarm -->
+<robot name="unit_enclosure">
+
+<!-- used for fixing the four walls to gazebo -->
+<link name="world"/>
+
+<!-- the link objects for four walls -->
+
+<!-- wall at x+1, wall at x+1 and x-1 will be longer than wall at y+1 and y-1 -->
+<link name="x+1">
+  <inertial>
+    <mass value="1"/>
+    <origin xyz="0 0 0"/>
+    <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+
+  <visual>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="0.05 2.1 0.05"/>
+    </geometry>
+  </visual>
+
+  <collision>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="0.05 2.1 0.05"/>
+    </geometry>
+  </collision>
+</link>
+
+<gazebo reference="x+1">
+  <material>Gazebo/Grey</material>
+</gazebo>
+
+<!-- wall at x-1 -->
+<link name="x-1">
+  <inertial>
+    <mass value="1"/>
+    <origin xyz="0 0 0"/>
+    <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+
+  <visual>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="0.05 2.1 0.05"/>
+    </geometry>
+  </visual>
+
+  <collision>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="0.05 2.1 0.05"/>
+    </geometry>
+  </collision>
+</link>
+
+<gazebo reference="x-1">
+  <material>Gazebo/Grey</material>
+</gazebo>
+
+<!-- wall at y+1 -->
+<link name="y+1">
+  <inertial>
+    <mass value="1"/>
+    <origin xyz="0 0 0"/>
+    <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+
+  <visual>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="2.0 0.05 0.05"/>
+    </geometry>
+  </visual>
+
+  <collision>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="2.0 0.05 0.05"/>
+    </geometry>
+  </collision>
+</link>
+
+<gazebo reference="y+1">
+  <material>Gazebo/Grey</material>
+</gazebo>
+
+<!-- wall at y-1 -->
+<link name="y-1">
+  <inertial>
+    <mass value="1"/>
+    <origin xyz="0 0 0"/>
+    <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+
+  <visual>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="2.0 0.05 0.05"/>
+    </geometry>
+  </visual>
+
+  <collision>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="2.0 0.05 0.05"/>
+    </geometry>
+  </collision>
+</link>
+
+<gazebo reference="y-1">
+  <material>Gazebo/Grey</material>
+</gazebo>
+
+<!-- the joint objects to fix the walls on the ground -->
+
+<!-- for the wall at x+1 -->
+<joint name="glue_wall_x+1" type="fixed">
+  <parent link="world"/>
+  <child link="x+1"/>
+  <origin xyz="1.025 0 0.025" rpy="0 0 0"/>
+</joint>
+
+<!-- for the wall at x+1 -->
+<joint name="glue_wall_x-1" type="fixed">
+  <parent link="world"/>
+  <child link="x-1"/>
+  <origin xyz="-1.025 0 0.025" rpy="0 0 0"/>
+</joint>
+
+<!-- for the wall at x+1 -->
+<joint name="glue_wall_y+1" type="fixed">
+  <parent link="world"/>
+  <child link="y+1"/>
+  <origin xyz="0 1.025 0.025" rpy="0 0 0"/>
+</joint>
+
+<!-- for the wall at x+1 -->
+<joint name="glue_wall_y-1" type="fixed">
+  <parent link="world"/>
+  <child link="y-1"/>
+  <origin xyz="0 -1.025 0.025" rpy="0 0 0"/>
+</joint>
+
+
+</robot>
+
