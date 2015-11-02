@@ -2,25 +2,15 @@
 <sdf version="1.4">
   <world name="default">
     
+    <!-- ground plane -->
     <include>
       <uri>model://ground_plane</uri>
     </include>
 
+    <!-- light -->
     <include>
       <uri>model://sun</uri>
     </include>
-
-    <include>
-      <uri>model://cafe_table</uri>
-      <pose>0.756237 -0.288636 0 0 -0 0</pose>
-    </include>
-
-    <physics type="ode">
-      <real_time_update_rate>1000.0</real_time_update_rate>
-      <gravity>
-        0.0 0.0 -9.81
-      </gravity>
-    </physics>
 
   </world>
 </sdf>

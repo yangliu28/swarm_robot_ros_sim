@@ -28,7 +28,7 @@
 </link>
 
 <gazebo reference="body_link">
-  <material>Gazebo/Grey</material>
+  <material>Gazebo/Blue</material>
 </gazebo>
 
 

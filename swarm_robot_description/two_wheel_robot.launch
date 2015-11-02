@@ -21,9 +21,11 @@
   <!-- load the URDF into the ROS Parameter Server, for visualization in Rviz -->
   <param name="robot_description" command="cat '$(find swarm_robot_description)/two_wheel_robot.urdf'"/>
 
+
+
   <!-- spawn multiple inchbot models in random positions -->
   <node pkg="gazebo_ros" type="spawn_model" name="urdf_spawner" respawn="false" output="screen"
-    args="-file $(find robot_specs"
+    args="-file $(find swarm_robot_description)/two_wheel_robot.urdf -urdf -model two_wheel_robot"/>
 
 
 </launch>
