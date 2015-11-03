@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+  <node pkg="swarm_robot_description" type="swarm_spawner_gazebo_client" name="swarm_spawner_gazebo_client"/>
+</launch>

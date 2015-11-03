@@ -10,7 +10,7 @@
 
   <!-- we resume the logic in empty_world.launch -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find swarm_robot_description)/initialize.world"/>
+    <arg name="world_name" value="$(find swarm_robot_description)/gazebo/initialize.world"/>
     <arg name="debug" value="$(arg debug)" />
     <arg name="gui" value="$(arg gui)" />
     <arg name="paused" value="$(arg paused)"/>
@@ -20,19 +20,27 @@
 
   <!-- load the URDF into the ROS Parameter Server, for visualization in Rviz -->
   <!-- the unit enclosure -->
-  <param name="unit_enclosure" command="cat '$(find swarm_robot_description)/unit_enclosure.urdf'"/>
-  <!-- the robot swarm of two_wheel_robot -->
-  <param name="two_wheel_robot0" command="cat '$(find swarm_robot_description)/two_wheel_robot.urdf'"/>
+  <param name="unit_enclosure" command="cat '$(find swarm_robot_description)/urdf/unit_enclosure.urdf'"/>
 
-  <!-- generate random posotions from swarm_positions.py -->
-  <param name="robot_positions" command="$(find swarm_robot_description)/swarm_positions.py"/>
+
+
+  <!-- the robot swarm of two_wheel_robot -->
+<!--   <param name="two_wheel_robot0" command="cat '$(find swarm_robot_description)/urdf/two_wheel_robot.urdf'"/> -->
+
+
+
 
   <!-- spawn multiple inchbot models in random positions -->
   <!-- the unit enclosure -->
-  <node pkg="gazebo_ros" type="spawn_model" name="unit_enclosure" respawn="true" respawn_delay="10" output="screen" args="-file $(find swarm_robot_description)/unit_enclosure.urdf -urdf -model unit_enclosure"/>
+  <node pkg="gazebo_ros" type="spawn_model" name="unit_enclosure" respawn="false" output="screen" args="-file $(find swarm_robot_description)/urdf/unit_enclosure.urdf -urdf -model unit_enclosure"/>
+
+
+
   <!-- the robot swarm of two_wheel_robot -->
-  <node pkg="gazebo_ros" type="spawn_model" name="two_wheel_robot0" respawn="true" respawn_delay="10" output="screen"
-    args="-file $(find swarm_robot_description)/two_wheel_robot.urdf -urdf -x robot_positions -model two_wheel_robot"/>
+<!--   <node pkg="gazebo_ros" type="spawn_model" name="two_wheel_robot0" respawn="false" output="screen"
+    args="-file $(find swarm_robot_description)/urdf/two_wheel_robot.urdf -urdf -x $(rosparam get robot_positions) -model two_wheel_robot"/> -->
+
+
 
 
 

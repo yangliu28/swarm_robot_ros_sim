@@ -17,7 +17,8 @@ catkin_simple()
 # Executables
 # cs_add_executable(example src/example.cpp)
 # target_link_library(example my_lib)
+cs_add_executable(swarm_spawner_gazebo_client src/swarm_spawner_gazebo_client.cpp)
+target_link_libraries(swarm_spawner_gazebo_client ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()
-    
