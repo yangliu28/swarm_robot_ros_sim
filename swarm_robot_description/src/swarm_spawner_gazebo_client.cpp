@@ -1,12 +1,38 @@
-// spawn robot swarm at customized number and positions using gazebo service
+// spawn robot swarm at customized quantity, positions and orientation using gazebo service
 
 #include <ros/ros.h>
-#include <gazebo_msgs/SpawnModel.h>
-#include <geometry_msgs/Pose.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <gazebo_msgs/SpawnModel.h>
+#include <geometry_msgs/Pose.h>
+#include <Eigen/Geometry>
+
+using namespace Eigen;
+
+geometry_msgs::Pose[] poseGenerator(int quantity, double half_range) {
+    // input the quantity of swarm robots and position range, output the pose message
+
+    geometry_msgs::Pose[] random_pose;  // output data
+    random_pose.resize(quantity);
+
+    Matrix<float, quantity, 3> random_matrix;  // container for random numbers
+    // first colomn for position.x
+    // second colomn for position.y
+    // third colomn for rotation angle
+    random_matrix = MatrixXd::Random(quantity, 3);  // generate random numbers in (-1, 1)
+
+    // map data, 1st & 2nd colomns to (-half_range, half_range), 3rd to (-M_PI, M_PI)
+    random_matrix.col(0) = random_matrix.col(0) * half_range;
+    random_matrix.col(1) = random_matrix.col(1) * half_range;    
+    random_matrix.col(2) = random_matrix.col(2) * M_PI;
+
+
+
+}
+
+
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "swarm_spawner_gazebo_client");
@@ -20,22 +46,29 @@ int main(int argc, char **argv) {
     std::ifstream inUrdf;
     std::stringstream strStream;
     std::string xmlStr;
-    inUrdf.open("two_wheel_robot.urdf");
+    // this is an absolute path, which means this node has to be invoked at ros_ws directory
+    inUrdf.open("src/swarm_robot_ros_sim/swarm_robot_description/urdf/two_wheel_robot.urdf");
     strStream << inUrdf.rdbuf();
     xmlStr = strStream.str();
 
+
+
+    AngleAxisf randomRotation(, Vector3f::UnitZ())
+
     // prepare service message
-    spawn_model_srv_msg.request.model_name = "two_wheel_robot";
+    spawn_model_srv_msg.request.model_name = "two_wheel_robot0";
     spawn_model_srv_msg.request.model_xml = xmlStr;
-    spawn_model_srv_msg.request.robot_namespace = "two_wheel_robot";
-    spawn_model_srv_msg.request.initial_pose.position.x = 0;
-    spawn_model_srv_msg.request.initial_pose.position.y = 0;
-    spawn_model_srv_msg.request.initial_pose.position.z = 0;
-    spawn_model_srv_msg.request.initial_pose.orientation.x = 0;
-    spawn_model_srv_msg.request.initial_pose.orientation.y = 0;
-    spawn_model_srv_msg.request.initial_pose.orientation.z = 0;
-    spawn_model_srv_msg.request.initial_pose.orientation.w = 1;
+    spawn_model_srv_msg.request.robot_namespace = "two_wheel_robot0";
+    spawn_model_srv_msg.request.initial_pose.position.x = 0.5;
+    spawn_model_srv_msg.request.initial_pose.position.y = 0.5;
+    spawn_model_srv_msg.request.initial_pose.position.z = 0.0;
+    spawn_model_srv_msg.request.initial_pose.orientation.x = 0.0;
+    spawn_model_srv_msg.request.initial_pose.orientation.y = 0.0;
+    spawn_model_srv_msg.request.initial_pose.orientation.z = 0.0;
+    spawn_model_srv_msg.request.initial_pose.orientation.w = 1.0;
     spawn_model_srv_msg.request.reference_frame = "world";
+
+    ros::Duration(5.0).sleep();  // sleep for 5 second
 
     // call service and get response
     bool callService = client.call(spawn_model_srv_msg);

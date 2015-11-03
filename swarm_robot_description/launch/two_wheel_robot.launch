@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
-  <!-- these are the arguments you can pass this launch file, edit here -->
+  <!-- these are the arguments you can pass this launch file -->
   <arg name="paused" default="false"/>
   <arg name="use_sim_time" default="true"/>
   <arg name="gui" default="true"/>
@@ -18,30 +18,16 @@
     <arg name="headless" value="$(arg headless)"/>
   </include>
 
-  <!-- load the URDF into the ROS Parameter Server, for visualization in Rviz -->
-  <!-- the unit enclosure -->
-  <param name="unit_enclosure" command="cat '$(find swarm_robot_description)/urdf/unit_enclosure.urdf'"/>
+
+  <!-- load the enclosure in parameter server -->
+  <param name="enclosure" command="cat '$(find swarm_robot_description)/urdf/enclosure_side_2.0.urdf'"/>
+
+  <!-- spawn the enclosure in gazebo -->
+  <node pkg="gazebo_ros" type="spawn_model" name="enclosure" respawn="false" output="screen" args="-file $(find swarm_robot_description)/urdf/enclosure_side_2.0.urdf -urdf -model enclosure_side_2.0"/>
+  <!-- <node pkg="gazebo_ros" type="spawn_model" name="enclosure" respawn="false" output="screen" args="-file $(find swarm_robot_description)/urdf/enclosure_side_10.0.urdf -urdf -model enclosure_side_10.0"/> -->
 
 
-
-  <!-- the robot swarm of two_wheel_robot -->
-<!--   <param name="two_wheel_robot0" command="cat '$(find swarm_robot_description)/urdf/two_wheel_robot.urdf'"/> -->
-
-
-
-
-  <!-- spawn multiple inchbot models in random positions -->
-  <!-- the unit enclosure -->
-  <node pkg="gazebo_ros" type="spawn_model" name="unit_enclosure" respawn="false" output="screen" args="-file $(find swarm_robot_description)/urdf/unit_enclosure.urdf -urdf -model unit_enclosure"/>
-
-
-
-  <!-- the robot swarm of two_wheel_robot -->
-<!--   <node pkg="gazebo_ros" type="spawn_model" name="two_wheel_robot0" respawn="false" output="screen"
-    args="-file $(find swarm_robot_description)/urdf/two_wheel_robot.urdf -urdf -x $(rosparam get robot_positions) -model two_wheel_robot"/> -->
-
-
-
+  <!-- <node pkg="swarm_robot_description" type="swarm_spawner_gazebo_client" name="swarm_spawner_gazebo_client"/> -->
 
 
 </launch>

@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 
+<!-- revised from unit_enclosure.urdf -->
 <!-- there are two unit enclosures connected by a door, for test of line formation movement -->
 <robot name="unit_enclosures_c_door">
 
