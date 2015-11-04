@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+
+<!-- a simple square enclosure for the robot swarm, with half side length 1.0 -->
+<robot name="enclosure_halfside_1.0">
+
+<!-- used for fixing the four walls to gazebo -->
+<link name="world"/>
+
+<!-- the link objects for four walls -->
+
+<!-- wall at upper x axis, walls at x axis will be longer than walls at y axis -->
+<link name="x_upper">
+  <inertial>
+    <mass value="1"/>
+    <origin xyz="0 0 0"/>
+    <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+
+  <visual>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="0.05 2.1 0.05"/>
+    </geometry>
+  </visual>
+
+  <collision>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="0.05 2.1 0.05"/>
+    </geometry>
+  </collision>
+</link>
+
+<gazebo reference="x_upper">
+  <material>Gazebo/Grey</material>
+</gazebo>
+
+<!-- wall at lower x axis -->
+<link name="x_lower">
+  <inertial>
+    <mass value="1"/>
+    <origin xyz="0 0 0"/>
+    <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+
+  <visual>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="0.05 2.1 0.05"/>
+    </geometry>
+  </visual>
+
+  <collision>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="0.05 2.1 0.05"/>
+    </geometry>
+  </collision>
+</link>
+
+<gazebo reference="x_lower">
+  <material>Gazebo/Grey</material>
+</gazebo>
+
+<!-- wall at upper y axis -->
+<link name="y_upper">
+  <inertial>
+    <mass value="1"/>
+    <origin xyz="0 0 0"/>
+    <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+
+  <visual>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="2.0 0.05 0.05"/>
+    </geometry>
+  </visual>
+
+  <collision>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="2.0 0.05 0.05"/>
+    </geometry>
+  </collision>
+</link>
+
+<gazebo reference="y_upper">
+  <material>Gazebo/Grey</material>
+</gazebo>
+
+<!-- wall at lower y axis -->
+<link name="y_lower">
+  <inertial>
+    <mass value="1"/>
+    <origin xyz="0 0 0"/>
+    <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+
+  <visual>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="2.0 0.05 0.05"/>
+    </geometry>
+  </visual>
+
+  <collision>
+    <origin xyz="0 0 0"/>
+    <geometry>
+      <box size="2.0 0.05 0.05"/>
+    </geometry>
+  </collision>
+</link>
+
+<gazebo reference="y_lower">
+  <material>Gazebo/Grey</material>
+</gazebo>
+
+<!-- the joint objects to fix the walls on the ground -->
+
+<!-- for the wall at upper x axis -->
+<joint name="glue_wall_x_upper" type="fixed">
+  <parent link="world"/>
+  <child link="x_upper"/>
+  <origin xyz="1.025 0 0.025" rpy="0 0 0"/>
+</joint>
+
+<!-- for the wall at lower x axis -->
+<joint name="glue_wall_x_lower" type="fixed">
+  <parent link="world"/>
+  <child link="x_lower"/>
+  <origin xyz="-1.025 0 0.025" rpy="0 0 0"/>
+</joint>
+
+<!-- for the wall at upper y axis -->
+<joint name="glue_wall_y_upper" type="fixed">
+  <parent link="world"/>
+  <child link="y_upper"/>
+  <origin xyz="0 1.025 0.025" rpy="0 0 0"/>
+</joint>
+
+<!-- for the wall at lower y axis -->
+<joint name="glue_wall_y_lower" type="fixed">
+  <parent link="world"/>
+  <child link="y_lower"/>
+  <origin xyz="0 -1.025 0.025" rpy="0 0 0"/>
+</joint>
+
+
+</robot>
+

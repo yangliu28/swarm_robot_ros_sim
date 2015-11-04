@@ -1,13 +1,8 @@
 <?xml version="1.0"?>
 
-<!-- a simple square enclosure for the robot swarm, revise to customize side length -->
-<!-- revised from enclosure_side_2.0.urdf -->
+<!-- a simple square enclosure for the robot swarm, with half side length 3.0 -->
 
-<!-- somehow urdf does not support parameters to be define or pass in when invoked -->
-<!-- this file is for customization of side length of square enclosure -->
-<!-- there are comments indicating which lines to change with a parameter 'side_length' -->
-
-<robot name="enclosure_side_customization">
+<robot name="enclosure_halfside_3.0">
 
 <!-- used for fixing the four walls to gazebo -->
 <link name="world"/>
@@ -27,16 +22,16 @@
   <visual>
     <origin xyz="0 0 0"/>
     <geometry>
-      <!-- <box size="0.05 side_length+0.1 0.05"/> -->
-      <box size="0.05 2.1 0.05"/>
+      <!-- <box size="0.05 halfside*2+0.1 0.05"/> -->
+      <box size="0.05 6.1 0.05"/>
     </geometry>
   </visual>
 
   <collision>
     <origin xyz="0 0 0"/>
     <geometry>
-      <!-- <box size="0.05 side_length+0.1 0.05"/> -->
-      <box size="0.05 2.1 0.05"/>
+      <!-- <box size="0.05 halfside*2+0.1 0.05"/> -->
+      <box size="0.05 6.1 0.05"/>
     </geometry>
   </collision>
 </link>
@@ -58,16 +53,16 @@
   <visual>
     <origin xyz="0 0 0"/>
     <geometry>
-      <!-- <box size="0.05 side_length+0.1 0.05"/> -->
-      <box size="0.05 2.1 0.05"/>
+      <!-- <box size="0.05 halfside*2+0.1 0.05"/> -->
+      <box size="0.05 6.1 0.05"/>
     </geometry>
   </visual>
 
   <collision>
     <origin xyz="0 0 0"/>
     <geometry>
-      <!-- <box size="0.05 side_length+0.1 0.05"/> -->
-      <box size="0.05 2.1 0.05"/>
+      <!-- <box size="0.05 halfside*2+0.1 0.05"/> -->
+      <box size="0.05 6.1 0.05"/>
     </geometry>
   </collision>
 </link>
@@ -89,16 +84,16 @@
   <visual>
     <origin xyz="0 0 0"/>
     <geometry>
-      <!-- <box size="side_length 0.05 0.05"/> -->
-      <box size="2.0 0.05 0.05"/>
+      <!-- <box size="halfside*2 0.05 0.05"/> -->
+      <box size="6.0 0.05 0.05"/>
     </geometry>
   </visual>
 
   <collision>
     <origin xyz="0 0 0"/>
     <geometry>
-      <!-- <box size="side_length 0.05 0.05"/> -->
-      <box size="2.0 0.05 0.05"/>
+      <!-- <box size="halfside*2 0.05 0.05"/> -->
+      <box size="6.0 0.05 0.05"/>
     </geometry>
   </collision>
 </link>
@@ -120,16 +115,16 @@
   <visual>
     <origin xyz="0 0 0"/>
     <geometry>
-      <!-- <box size="side_length 0.05 0.05"/> -->
-      <box size="2.0 0.05 0.05"/>
+      <!-- <box size="halfside*2 0.05 0.05"/> -->
+      <box size="6.0 0.05 0.05"/>
     </geometry>
   </visual>
 
   <collision>
     <origin xyz="0 0 0"/>
     <geometry>
-      <!-- <box size="side_length 0.05 0.05"/> -->
-      <box size="2.0 0.05 0.05"/>
+      <!-- <box size="halfside*2 0.05 0.05"/> -->
+      <box size="6.0 0.05 0.05"/>
     </geometry>
   </collision>
 </link>
@@ -138,38 +133,39 @@
   <material>Gazebo/Grey</material>
 </gazebo>
 
+
 <!-- the joint objects to fix the walls on the ground -->
 
 <!-- for the wall at upper x axis -->
 <joint name="glue_wall_x_upper" type="fixed">
   <parent link="world"/>
   <child link="x_upper"/>
-  <!-- <origin xyz="side_length/2+0.025 0 0.025" rpy="0 0 0"/> -->
-  <origin xyz="1.025 0 0.025" rpy="0 0 0"/>
+  <!-- <origin xyz="halfside+0.025 0 0.025" rpy="0 0 0"/> -->
+  <origin xyz="3.025 0 0.025" rpy="0 0 0"/>
 </joint>
 
 <!-- for the wall at lower x axis -->
 <joint name="glue_wall_x_lower" type="fixed">
   <parent link="world"/>
   <child link="x_lower"/>
-  <!-- <origin xyz="-(side_length/2+0.025) 0 0.025" rpy="0 0 0"/> -->
-  <origin xyz="-1.025 0 0.025" rpy="0 0 0"/>
+  <!-- <origin xyz="-(halfside+0.025) 0 0.025" rpy="0 0 0"/> -->
+  <origin xyz="-3.025 0 0.025" rpy="0 0 0"/>
 </joint>
 
 <!-- for the wall at upper y axis -->
 <joint name="glue_wall_y_upper" type="fixed">
   <parent link="world"/>
   <child link="y_upper"/>
-  <!-- <origin xyz="0 side_length/2+0.025 0.025" rpy="0 0 0"/> -->
-  <origin xyz="0 1.025 0.025" rpy="0 0 0"/>
+  <!-- <origin xyz="0 halfside+0.025 0.025" rpy="0 0 0"/> -->
+  <origin xyz="0 3.025 0.025" rpy="0 0 0"/>
 </joint>
 
 <!-- for the wall at lower y axis -->
 <joint name="glue_wall_y_lower" type="fixed">
   <parent link="world"/>
   <child link="y_lower"/>
-  <!-- <origin xyz="0 -(side_length/2+0.025) 0.025" rpy="0 0 0"/> -->
-  <origin xyz="0 -1.025 0.025" rpy="0 0 0"/>
+  <!-- <origin xyz="0 -(halfside+0.025) 0.025" rpy="0 0 0"/> -->
+  <origin xyz="0 -3.025 0.025" rpy="0 0 0"/>
 </joint>
 
 

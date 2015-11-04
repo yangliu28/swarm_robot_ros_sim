@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+  <!-- these are the arguments you can pass this launch file -->
+  <arg name="paused" default="false"/>
+  <arg name="debug" default="false"/>
+  <arg name="robot_model_path" default="src/swarm_robot_ros_sim/swarm_robot_description/urdf/two_wheel_robot.urdf"/>
+  <arg name="robot_quantity" default="10"/>
+  <arg name="half_range" default="1.0"/>
+
+  <!-- we resume the logic in empty_world.launch -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find swarm_robot_description)/gazebo/initialize.world"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="true" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="headless" value="false"/>
+  </include>
+
+  <!-- parameter server -->
+  <param name="robot_quantity" type="int" value="$(arg robot_quantity)"/>
+  <param name="half_range" type="double" value="$(arg half_range)"/>
+  <param name="robot_model_path" type="str" value="$(arg robot_model_path)"/>
+  <!-- load the enclosure model -->
+  <param name="enclosure" command="cat '$(find swarm_robot_description)/urdf/enclosure_halfside_3.0.urdf'"/>
+
+  <!-- spawn the enclosure in gazebo -->
+  <node name="enclosure" pkg="gazebo_ros" type="spawn_model" args="-file $(find swarm_robot_description)/urdf/enclosure_halfside_3.0.urdf -urdf -model enclosure_halfside_3.0"/>
+
+  <!-- somehow node swarm_spawner_gazebo_client does not work in this or a standalone launch file -->
+  <!-- will just use rosrun to bring in the robot swarm -->
+
+
+</launch>
