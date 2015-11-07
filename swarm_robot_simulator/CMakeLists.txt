@@ -16,7 +16,7 @@ catkin_simple()
 
 # Executables
 # cs_add_executable(example src/example.cpp)
-# target_link_library(example my_lib)
+# target_link_libraries(example my_lib)
 
 cs_install()
 cs_export()
