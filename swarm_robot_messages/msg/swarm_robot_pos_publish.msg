@@ -5,5 +5,6 @@
 # time, duration
 # other msg files
 # variable-length array[] and fixed-length array[C]
-
 Header header
+geometry_msgs/Pose 
+

@@ -24,14 +24,24 @@ int main(int argc, char** argv) {
         "/gezebo/get_model_state");
     gazebo_msgs::GetModelState get_model_state_srv_msg;
 
-    // call the service
-    get_model_state_srv_msg.request.model_name = "two_wheel_robot_0";
-    get_model_state_srv_msg.request.relative_entity_name = "world";
-    get_model_state_client.call(get_model_state_srv_msg);
-    
+    // get the number of swarm robots
+    int robot_quantity;
+    get_quantity = nh.getParam("/robot_quantity", robot_quantity);
+    if (!get_quantity)
+        return 0;  // return if fail to get parameter
+
+
 
     while(ros::ok()) {
-        // call the ser
+        for (int i=0; i<robot_quantity; i++) {
+            // prepare the service message
+            std::string index_string = intToString(i);
+            get_model_state_srv_msg.request.model_name = "two_wheel_robot_0";
+            get_model_state_srv_msg.request.relative_entity_name = "world";
+            // call the service
+            get_model_state_client.call(get_model_state_srv_msg);
+        }
+        
     }
 
 
