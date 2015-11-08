@@ -4,6 +4,7 @@
   <!-- these are the arguments you can pass this launch file -->
   <arg name="paused" default="false"/>
   <arg name="debug" default="false"/>
+  <arg name="robot_model_name" default="two_wheel_robot"/>
   <arg name="robot_model_path" default="src/swarm_robot_ros_sim/swarm_robot_description/urdf/two_wheel_robot.urdf"/>
   <arg name="robot_quantity" default="10"/>
   <arg name="half_range" default="1.0"/>
@@ -19,6 +20,7 @@
   </include>
 
   <!-- parameter server -->
+  <param name="robot_model_name" type="str" value="$(arg robot_model_name)"/>
   <param name="robot_quantity" type="int" value="$(arg robot_quantity)"/>
   <param name="half_range" type="double" value="$(arg half_range)"/>
   <param name="robot_model_path" type="str" value="$(arg robot_model_path)"/>

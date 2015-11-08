@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(swarm_robot_controller)
+project(swarm_robot_action)
 
 find_package(catkin_simple REQUIRED)
 
@@ -15,8 +15,9 @@ catkin_simple()
 # cs_add_library(my_lib src/my_lib.cpp)   
 
 # Executables
-cs_add_executable(swarm_robot_pos_publisher src/swarm_robot_pos_publisher.cpp)
-target_link_libraries(swarm_robot_pos_publisher ${catkin_LIBRARIES})
+# cs_add_executable(example src/example.cpp)
+# target_link_library(example my_lib)
 
 cs_install()
 cs_export()
+    

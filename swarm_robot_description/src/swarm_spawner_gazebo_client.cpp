@@ -48,15 +48,17 @@ int main(int argc, char **argv) {
     gazebo_msgs::SpawnModel spawn_model_srv_msg;  // service message
     geometry_msgs::Pose model_pose;  // model pose message for service message
 
-    // get the number of swarm robots and its distribution range
+    // get initialization information of robot swarm from parameter
+    std::string robot_model_name;
     std::string robot_model_path;
     int robot_quantity;
     double half_range;
-    bool get_path, get_quantity, get_range;
+    bool get_name, get_path, get_quantity, get_range;
+    get_name = nh.getParam("/robot_model_name", robot_model_name);
     get_path = nh.getParam("/robot_model_path", robot_model_path);
     get_quantity = nh.getParam("/robot_quantity", robot_quantity);
     get_range = nh.getParam("/half_range", half_range);
-    if (!(get_path && get_quantity && get_range))
+    if (!(get_name && get_path && get_quantity && get_range))
         return 0;  // return if fail to get parameters
 
     // prepare: the xml for service call, read urdf into string
@@ -81,8 +83,8 @@ int main(int argc, char **argv) {
     for (int i=0; i<robot_quantity; i++) {
         std::string index_string = intToString(i);
         // prepare service message for each swarm robot
-        spawn_model_srv_msg.request.model_name = "two_wheel_robot_" + index_string;
-        spawn_model_srv_msg.request.robot_namespace = "two_wheel_robot_" + index_string;
+        spawn_model_srv_msg.request.model_name = robot_model_name + "_" + index_string;
+        spawn_model_srv_msg.request.robot_namespace = robot_model_name + "_" + index_string;
         spawn_model_srv_msg.request.initial_pose.position.x = randomNumbers(i, 0);
         spawn_model_srv_msg.request.initial_pose.position.y = randomNumbers(i, 1);
         // calculate the quaternion from random orientation angle
@@ -96,9 +98,9 @@ int main(int argc, char **argv) {
         bool call_service = client.call(spawn_model_srv_msg);  // call the server
         if (call_service) {
             if (spawn_model_srv_msg.response.success)
-                std::cout << "two_wheel_robot_" << index_string << " has been spawned" << std::endl;
+                std::cout << robot_model_name << "_" << index_string << " has been spawned" << std::endl;
             else
-                std::cout << "two_wheel_robot_" << index_string << " spawn failed" << std::endl;
+                std::cout << robot_model_name << "_" << index_string << " spawn failed" << std::endl;
         }
         else {
             ROS_ERROR("Failed to connect with gazebo server");
