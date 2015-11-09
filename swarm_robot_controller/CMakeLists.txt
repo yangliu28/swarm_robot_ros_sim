@@ -17,9 +17,11 @@ catkin_simple()
 # Executables
 cs_add_executable(swarm_robot_pos_publisher src/swarm_robot_pos_publisher.cpp)
 cs_add_executable(two_wheel_pos_publisher src/two_wheel_pos_publisher.cpp)
+cs_add_executable(two_wheel_pos_minimal_controller src/two_wheel_pos_minimal_controller.cpp)
 
 target_link_libraries(swarm_robot_pos_publisher ${catkin_LIBRARIES})
 target_link_libraries(two_wheel_pos_publisher ${catkin_LIBRARIES})
+target_link_libraries(two_wheel_pos_minimal_controller ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()

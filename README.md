@@ -16,7 +16,7 @@ One package will be the place in which different control algorithms reside.
 This project starts after investigating several swarm robot platforms like Kilobot, Jasmine, E-puck, Alice, etc, and work on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while, it would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. This project is also for the purpose of learning various tools and programming in ROS.
 
 ## Setup
-Have ROS installed and workspace setup.(missed a lot of details)
+Have ROS installed and workspace setup.(missing a lot of details)
 
 Clone this package into ~/ros_ws/src and build.
 

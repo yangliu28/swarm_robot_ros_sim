@@ -42,6 +42,16 @@ int main(int argc, char** argv) {
         "/gazebo/get_joint_properties");
     gazebo_msgs::GetJointProperties get_wheel_position_srv_msg;  // service message
 
+    // make sure get_joint_properties service is ready
+    ros::Duration half_sec(0.5);
+    bool service_ready = false;
+    while (!service_ready) {
+        service_ready = ros::service::exists("/gazebo/get_joint_properties",true);
+        ROS_INFO("waiting for /gazebo/get_joint_properties service");
+        half_sec.sleep();
+    }
+    ROS_INFO("/gazebo/get_joint_properties service exists");
+
     // initialize a publisher with topic name "two_wheel_poses", buffer size is 1
     ros::Publisher two_wheel_poses_publisher = 
         nh.advertise<swarm_robot_msgs::two_wheel_poses>("two_wheel_poses", 1);
@@ -49,7 +59,9 @@ int main(int argc, char** argv) {
     // prepare messages to be published
     swarm_robot_msgs::two_wheel_poses current_poses;
     current_poses.left_wheel_pos.resize(robot_quantity);
+    current_poses.left_wheel_vel.resize(robot_quantity);
     current_poses.right_wheel_pos.resize(robot_quantity);
+    current_poses.right_wheel_vel.resize(robot_quantity);
 
     // publishing loop
     ros::Rate naptime(g_publish_frequency);  // publishing frequency control
@@ -69,12 +81,14 @@ int main(int argc, char** argv) {
             get_wheel_position_client.call(get_wheel_position_srv_msg);
             // prepare left wheel message to be published
             current_poses.left_wheel_pos[i] = get_wheel_position_srv_msg.response.position[0];
+            current_poses.left_wheel_vel[i] = get_wheel_position_srv_msg.response.rate[0];
 
             // get right wheel positions
             get_wheel_position_srv_msg.request.joint_name = right_motor_name;
             get_wheel_position_client.call(get_wheel_position_srv_msg);
             // prepare right wheel message to be published
             current_poses.right_wheel_pos[i] = get_wheel_position_srv_msg.response.position[0];
+            current_poses.right_wheel_vel[i] = get_wheel_position_srv_msg.response.rate[0];
         }
         // publish data
         two_wheel_poses_publisher.publish(current_poses);
