@@ -46,6 +46,9 @@
   <build_depend>swarm_robot_msgs</build_depend>
   <run_depend>swarm_robot_msgs</run_depend>
 
+  <!-- Eigen requires cmake_modules-->
+  <build_depend>cmake_modules</build_depend>
+
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- You can specify that this package is a metapackage here: -->

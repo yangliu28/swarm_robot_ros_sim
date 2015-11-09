@@ -9,9 +9,15 @@
 #include <ros/ros.h>
 #include <vector>
 #include <math.h>
+#include <Eigen/Dense>
 #include <swarm_robot_msgs/two_wheel_poses.h>
 #include <gazebo_msgs/ApplyJointEffort.h>
 #include <swarm_robot_srv/kpkv_msg.h>
+
+using namespace Eigen;
+
+// use to convert array to eigen vector
+typedef Map<VectorXd> MapVectorXd;
 
 // constants, change here
 double dt = 0.01; // sample time for the controller
@@ -21,12 +27,18 @@ double dt = 0.01; // sample time for the controller
 // global variable
 double g_kp = 10.0;  // to be tuned
 double g_kv = 3.0;  // to be tuned
-std::vector<double> g_left_wheel_poses;
-std::vector<double> g_left_wheel_vels;
-std::vector<double> g_left_wheel_poses_cmd;  // no need to specify velocity in command
-std::vector<double> g_right_wheel_poses;
-std::vector<double> g_right_wheel_vels;
-std::vector<double> g_right_wheel_poses_cmd;
+VectorXd g_left_wheel_poses;
+VectorXd g_left_wheel_vels;
+VectorXd g_left_wheel_poses_cmd;  // no need to specify velocity for cmd
+VectorXd g_right_wheel_poses;
+VectorXd g_right_wheel_vels;
+VectorXd g_right_wheel_poses_cmd;
+// std::vector<double> g_left_wheel_poses;
+// std::vector<double> g_left_wheel_vels;
+// std::vector<double> g_left_wheel_poses_cmd;  // no need to specify velocity in command
+// std::vector<double> g_right_wheel_poses;
+// std::vector<double> g_right_wheel_vels;
+// std::vector<double> g_right_wheel_poses_cmd;
 bool g_cmd_callback_started = false;  // cmd callback has been invoked at least once
 
 // int to string converter
@@ -37,11 +49,17 @@ std::string intToString(int a) {
 }
 
 // callback for message from topic "two_wheel_poses"
-void twoWheelPosesCallback(const swarm_robot_msgs::two_wheel_poses& pos_msg) {
-    g_left_wheel_poses = pos_msg.left_wheel_pos;
-    g_left_wheel_vels = pos_msg.left_wheel_vel;
-    g_right_wheel_poses = pos_msg.right_wheel_pos;
-    g_right_wheel_vels = pos_msg.right_wheel_vel;
+void twoWheelPosesCallback(const swarm_robot_msgs::two_wheel_poses& message_holder) {
+    // convert from array to Eigen type
+    swarm_robot_msgs::two_wheel_poses pos_msg = message_holder;  // make a copy
+    g_left_wheel_poses = MapVectorXd(&pos_msg.left_wheel_pos[0], pos_msg.left_wheel_pos.size());
+    g_left_wheel_vels = MapVectorXd(&pos_msg.left_wheel_vel[0], pos_msg.left_wheel_vel.size());
+    g_right_wheel_poses = MapVectorXd(&pos_msg.right_wheel_pos[0], pos_msg.right_wheel_pos.size());
+    g_right_wheel_vels = MapVectorXd(&pos_msg.right_wheel_vel[0], pos_msg.right_wheel_vel.size());
+    // g_left_wheel_poses = pos_msg.left_wheel_pos;
+    // g_left_wheel_vels = pos_msg.left_wheel_vel;
+    // g_right_wheel_poses = pos_msg.right_wheel_pos;
+    // g_right_wheel_vels = pos_msg.right_wheel_vel;
     // check if cmd callback started yet
     if (!g_cmd_callback_started) {
         // let the cmd poses be the same as current poses
@@ -51,11 +69,15 @@ void twoWheelPosesCallback(const swarm_robot_msgs::two_wheel_poses& pos_msg) {
 }
 
 // callback for message from topic "two_wheel_poses_cmd"
-void twoWheelPosesCmdCallback(const swarm_robot_msgs::two_wheel_poses& pos_msg) {
+void twoWheelPosesCmdCallback(const swarm_robot_msgs::two_wheel_poses& message_holder) {
     if (!g_cmd_callback_started)  // first time to be invoked
         g_cmd_callback_started = true;
-    g_left_wheel_poses_cmd = pos_msg.left_wheel_pos;
-    g_right_wheel_poses_cmd = pos_msg.right_wheel_pos;
+    // convert from array to Eigen type
+    swarm_robot_msgs::two_wheel_poses pos_msg = message_holder;  // make a copy
+    g_left_wheel_poses_cmd = MapVectorXd(&pos_msg.left_wheel_pos[0], pos_msg.left_wheel_pos.size());
+    g_right_wheel_poses_cmd = MapVectorXd(&pos_msg.right_wheel_pos[0], pos_msg.right_wheel_pos.size());
+    // g_left_wheel_poses_cmd = pos_msg.left_wheel_pos;
+    // g_right_wheel_poses_cmd = pos_msg.right_wheel_pos;
 }
 
 // callback function for the service "two_wheel_kpkv"
@@ -85,8 +107,10 @@ int main(int argc, char **argv) {
 
     // resize global variables
     g_left_wheel_poses.resize(robot_quantity);
+    g_left_wheel_vels.resize(robot_quantity);
     g_left_wheel_poses_cmd.resize(robot_quantity);
     g_right_wheel_poses.resize(robot_quantity);
+    g_right_wheel_vels.resize(robot_quantity);
     g_right_wheel_poses_cmd.resize(robot_quantity);
 
     // initialize a subscriber for "two_wheel_poses"
@@ -117,10 +141,14 @@ int main(int argc, char **argv) {
 
     // prepare control variables
     ros::Rate rate_timer(1/dt);
-    std::vector<double> left_wheel_poses_err;
-    std::vector<double> right_wheel_poses_err;
-    std::vector<double> left_wheel_torque;
-    std::vector<double> right_wheel_torque;
+    VectorXd left_wheel_poses_err;
+    VectorXd right_wheel_poses_err;
+    VectorXd left_wheel_torque;
+    VectorXd right_wheel_torque;
+    // std::vector<double> left_wheel_poses_err;
+    // std::vector<double> right_wheel_poses_err;
+    // std::vector<double> left_wheel_torque;
+    // std::vector<double> right_wheel_torque;
     left_wheel_poses_err.resize(robot_quantity);
     right_wheel_poses_err.resize(robot_quantity);
     left_wheel_torque.resize(robot_quantity);
@@ -141,7 +169,7 @@ int main(int argc, char **argv) {
             // do not watch for periodicity, that is, make error in (-M_PI, M_PI)
             // because wheels are continuous rotating, no need to be in that range
 
-            s_index = intToString(i);
+            std::string s_index = intToString(i);
             // actually cheat here, no better way to get the key words "left_motor" and "right_motor"
             left_motor_name = robot_model_name + "_" + s_index + "::left_motor";
             right_motor_name = robot_model_name + "_" + s_index + "::right_motor";
