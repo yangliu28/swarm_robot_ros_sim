@@ -34,6 +34,7 @@ Matrix<double, Dynamic, 3> randomGenerator(int quantity, double half_range) {
     return random_matrix;
 }
 
+// int to string converter
 std::string intToString(int a) {
     std::stringstream ss;
     ss << a;

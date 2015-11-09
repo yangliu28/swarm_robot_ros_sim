@@ -1,4 +1,5 @@
-// this node will publish topic on the position and orientation of all robot
+// this node will publish the topic "swarm_robot_poses"
+// which are the current positions and orientations of all robots
 
 // by subscribe to the topic: /gazebo/model_state (publishing at 1000Hz)
 // the purpose is to simplify message from above topic and publish them
@@ -52,7 +53,7 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "swarm_robot_pos_publisher");
     ros::NodeHandle nh;
 
-    // get initialization information of robot swarm from parameter
+    // get initialization information of robot swarm from parameter server
     bool get_name, get_quantity;
     get_name = nh.getParam("/robot_model_name", g_robot_model_name);
     get_quantity = nh.getParam("/robot_quantity", g_robot_quantity);
@@ -87,7 +88,7 @@ int main(int argc, char** argv) {
 
     // publishing loop
     ros::Rate naptime(g_publish_frequency);  // publishing frequency control
-    while(ros::ok()) {
+    while (ros::ok()) {
         current_poses.x = g_x;
         current_poses.y = g_y;
         current_poses.angle = g_angle;

@@ -24,8 +24,9 @@ Clone this package into ~/ros_ws/src and build.
 In different terminals:
 
 ```
-roslaunch swarm_robot_description battlefield.launch robot_quantity:=20
+roslaunch swarm_robot_description initialize.launch robot_quantity:=10
 rosrun swarm_robot_description swarm_spawner_gazebo_client
+roslaunch swarm_robot_controller pos_publisher.launch
 ```
 
 ## Contributing
