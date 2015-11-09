@@ -6,7 +6,7 @@ A swarm robot simulation environment for ROS Indigo to be used with Gazebo.
 
 "swarm_robot_description" package will describe the robot models, one simple model could be a two-wheel cubic robot, and also the gazebo environment setting files and launch files.
 
-"swarm_robot_msgs" package will contain the costomized messages and services that will be used in other packages.
+"swarm_robot_msgs" folder will contain packages for costomized messages, services and actions that will be used in other packages.
 
 "swarm_robot_simulator" package will contain simulators for physical properties, including actuation, communication and sensing capabilities.
 
