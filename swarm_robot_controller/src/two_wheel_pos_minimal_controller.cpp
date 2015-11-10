@@ -19,10 +19,8 @@ double dt = 0.01; // sample time for the controller
 // used in the apply joint effort service message as duration
 
 // global variable
-double g_kp = 0.0;  // for debug
-double g_kv = 0.0;  // for debug
-// double g_kp = 0.1;  // to be tuned
-// double g_kv = 0.03;  // to be tuned
+double g_kp = 0.00001;  // to be tuned
+double g_kv = 0.000003;  // to be tuned
 std::vector<double> g_left_wheel_poses;
 std::vector<double> g_left_wheel_vels;
 std::vector<double> g_left_wheel_poses_cmd;  // no need to specify velocity in command
@@ -142,7 +140,7 @@ int main(int argc, char **argv) {
             // calculate the torque
             left_wheel_torque = g_kp * left_wheel_pos_err - g_kv * g_left_wheel_vels[i];
             right_wheel_torque = g_kp * right_wheel_pos_err - g_kv * g_right_wheel_vels[i];
-            left_wheel_torque = 0.00001;
+            left_wheel_torque = 0.00001;  // for debug
 
             std::string s_index = intToString(i);
             // actually cheat here, no better way to get the key words "left_motor" and "right_motor"
@@ -152,12 +150,13 @@ int main(int argc, char **argv) {
             // set left wheel torque
             set_wheel_torque_srv_msg.request.joint_name = left_motor_name;
             set_wheel_torque_srv_msg.request.effort = left_wheel_torque;
-            ROS_INFO_STREAM(left_wheel_torque);
+            ROS_INFO_STREAM("left_wheel_torque " << left_wheel_torque);  // for debug
             set_wheel_torque_client.call(set_wheel_torque_srv_msg);
 
             // set right wheel torque
             set_wheel_torque_srv_msg.request.joint_name = right_motor_name;
             set_wheel_torque_srv_msg.request.effort = right_wheel_torque;
+            ROS_INFO_STREAM("right_wheel_torque " << right_wheel_torque);  // for debug
             set_wheel_torque_client.call(set_wheel_torque_srv_msg);
         }
 

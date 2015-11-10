@@ -28,6 +28,9 @@
 </link>
 
 <gazebo reference="body_link">
+  <!-- tag name has to be mu1, though in gazebo they are mu and mu2 -->
+  <mu1>0.2</mu1>
+  <mu2>0.2</mu2>
   <material>Gazebo/Blue</material>
 </gazebo>
 
@@ -57,6 +60,8 @@
 </link>
 
 <gazebo reference="left_wheel">
+  <mu1>100</mu1>
+  <mu2>50</mu2>
   <material>Gazebo/Red</material>
 </gazebo>
 
@@ -86,6 +91,8 @@
 </link>
 
 <gazebo reference="right_wheel">
+  <mu1>100</mu1>
+  <mu2>50</mu2>
   <material>Gazebo/Red</material>
 </gazebo>
 
