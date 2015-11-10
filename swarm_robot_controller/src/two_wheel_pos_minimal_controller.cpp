@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
             // calculate the torque
             left_wheel_torque = g_kp * left_wheel_pos_err - g_kv * g_left_wheel_vels[i];
             right_wheel_torque = g_kp * right_wheel_pos_err - g_kv * g_right_wheel_vels[i];
-            left_wheel_torque = 0.00001;  // for debug
+            // left_wheel_torque = 0.00001;  // for debug
 
             std::string s_index = intToString(i);
             // actually cheat here, no better way to get the key words "left_motor" and "right_motor"
