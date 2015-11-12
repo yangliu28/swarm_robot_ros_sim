@@ -8,12 +8,16 @@ This project aims to build a swarm robot simulation environment in ROS. That is,
 
 As time is limited for graduate project, all parts of this project will be simpilified to the minimal required version, with the main purpose of just examining the possibility of such a simulation in ROS. For example, when building a robot model that could moving around on the ground, a cube with two wheels will be the minimal requirement.
 
-The goals by the time of graduate project evaluation: (inappropriate goals will be changed here)
+The goals by the time of graduate project evaluation: (*inappropriate goals will be changed here*)
 
 1. A package contains robot model files and launch files for the initialization of the environment. (already done)
+
 2. A package contains customized messages, services and actions that will be used in other packages. (partly done)
+
 3. A package contains basic low-level control of swarm robot, like the position/speed control of a single wheel, the position/orientation of a single robot. (partly done)
+
 4. A package contains high-level control of swarm robot, like making movement action based on the sensing messages from other robot.
+
 5. For live demonstration, robot swarm will be able to move around on the ground. When a simple action strategy is employed, robot swarm should be able to demonstrate a sensible behavior, like simply avoiding hitting each other.
 
 ## What's inside
