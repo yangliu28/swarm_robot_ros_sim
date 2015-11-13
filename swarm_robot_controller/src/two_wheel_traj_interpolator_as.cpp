@@ -22,7 +22,7 @@
 #include <swarm_robot_action/swarm_robot_trajAction.h>
 #include <swarm_robot_msgs/two_wheel_poses.h>
 
-// interpolation parameters
+// interpolation parameters, change setup here
 const double dt = 0.01;  // interpolating resolution
 // minimal distance with goal position to interpolate
 // distance small than ds_min will be neglected, cube size of two_wheel_robot is 0.0254
@@ -117,9 +117,14 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
     ROS_INFO("in executeCb...");
 
 // if the goal position is too close, neglect it
+// rotation angle is between
 
 
+// remember to ros::spinOnce at place that is necessary
 
+// not a precise way of motion control
+// when one wheel is rotating, the other wheel will naturally rotating the other direction
+// how to limit that effect, and make position control more precise
 
 
 }

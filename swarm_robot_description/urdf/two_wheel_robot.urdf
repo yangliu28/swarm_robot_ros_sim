@@ -104,7 +104,11 @@
   <origin xyz="0 0.0177 0.0127" rpy="1.5708 0 0" />
 <!--   this is very weird, the uncommented one is more reasonable
   but the uncommented one demonstrate the right position and rotation in gazebo -->
-  <axis xyz="0 0 1" />
+  <axis xyz="0 0 -1" />
+<!--   axis setting is important here, with the corresponding setting in right_motor
+  two wheels are tuned at the same direction, which means
+  when the same wheel position command is given, both wheels will make the same effect
+  of pushing the robot forward or backward -->
 </joint>
 
 
@@ -114,6 +118,7 @@
   <!-- <origin xyz="0 0.0177 0.0127" rpy="1.5708 0 0" /> -->
   <origin xyz="0 -0.0177 0.0127" rpy="-1.5708 0 0" />
   <axis xyz="0 0 1" />
+
 </joint>
 
 

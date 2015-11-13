@@ -70,15 +70,16 @@ int main(int argc, char **argv) {
     double in_right_wheel_incre;
     // get command loop
     while (ros::ok()) {
+        std::cout << std::endl;
         // get the index of the robot, chance ot quit
-        std::cout << std::endl << "enter the index of the robot (0-based)" << std::endl
+        std::cout << "enter the index of the robot (0-based)" << std::endl
             << "(should be between 0 and " << intToString(robot_quantity - 1) << ", x to quit): ";
         std::cin >> in_index;
         if (in_index.compare("x") == 0)
             return 0;
         in_index_int = std::atoi(in_index.c_str());  // convert string to int
 
-        ros::spinOnce();  // update global variables, necessary here
+        ros::spinOnce();  // necessary here, left wheel poses update again
         // print out wheel position of specified robot
         std::cout << "    left wheel position is " << g_left_wheel_poses[in_index_int] << std::endl;
         std::cout << "    right wheel position is " << g_right_wheel_poses[in_index_int] << std::endl;
