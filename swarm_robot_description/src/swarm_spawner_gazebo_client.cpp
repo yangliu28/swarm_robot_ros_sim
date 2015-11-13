@@ -104,6 +104,11 @@ int main(int argc, char **argv) {
         spawn_model_srv_msg.request.initial_pose.orientation.z = qf.z();
         spawn_model_srv_msg.request.initial_pose.orientation.w = qf.w();
 
+        // for debug
+        ROS_INFO_STREAM("random x position of " << index_string << " is " << randomNumbers(i, 0));
+        ROS_INFO_STREAM("random y position of " << index_string << " is " << randomNumbers(i, 1));        
+        ROS_INFO_STREAM("random rotation angle of " << index_string << " is " << randomNumbers(i, 2));
+
         // call service and get response
         bool call_service = client.call(spawn_model_srv_msg);  // call the server
         if (call_service) {

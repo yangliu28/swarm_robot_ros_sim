@@ -22,6 +22,12 @@
 #include <swarm_robot_action/swarm_robot_trajAction.h>
 #include <swarm_robot_msgs/two_wheel_poses.h>
 
+// interpolation parameters
+const double dt = 0.01;  // interpolating resolution
+// minimal distance with goal position to interpolate
+// distance small than ds_min will be neglected, cube size of two_wheel_robot is 0.0254
+const double ds_min = 0.01;
+
 class TwoWheelTrajActionServer {
 public:
     TwoWheelTrajActionServer(ros::NodeHandle* nodehandle);
@@ -80,10 +86,12 @@ TwoWheelTrajActionServer::TwoWheelTrajActionServer(ros::NodeHandle* nodehandle):
     if (!(get_name && get_quantity))
         return 0;  // return if fail to get parameter
 
-    // resize messages
-
-
-
+    // make sure topics "swarm_robot_poses" and "two_wheel_poses" are active
+    while (!(b_robot_poses_cb_started && b_wheel_poses_cb_started)) {
+        ros::Duration(0.5).sleep();
+        ros::spinOnce();
+    }
+    std::cout << "topic message from swarm_robot_poses and two_wheel_poses is ready" << std::endl;
 
     as_.start();  // start the "two_wheel_traj_action"
 }
@@ -107,6 +115,12 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
     SimpleActionServer<swarm_robot_action::swarm_robot_trajAction>::GoalConstPtr& goal)
 {
     ROS_INFO("in executeCb...");
+
+// if the goal position is too close, neglect it
+
+
+
+
 
 }
 

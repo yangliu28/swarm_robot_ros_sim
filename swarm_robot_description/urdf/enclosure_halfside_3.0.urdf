@@ -36,8 +36,12 @@
   </collision>
 </link>
 
-<gazebo reference="x_upper">
+<!-- <gazebo reference="x_upper">
   <material>Gazebo/Grey</material>
+</gazebo> -->
+
+<gazebo reference="x_upper">
+  <material>Gazebo/Black</material>
 </gazebo>
 
 <!-- wall at lower x axis -->
