@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
-  <!-- publish on the topic "swarm_robot_poses" -->
   <node name="swarm_robot_pos_publisher" pkg="swarm_robot_controller" type="swarm_robot_pos_publisher"/>
 
-  <!-- publish on the topic "two_wheel_poses" -->
   <node name="two_wheel_pos_publisher" pkg="swarm_robot_controller" type="two_wheel_pos_publisher"/>
+
+  <node name="two_wheel_pos_minimal_controller" pkg="swarm_robot_controller" type="two_wheel_pos_minimal_controller"/>
 
 </launch>
 

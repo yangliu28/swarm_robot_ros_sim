@@ -19,15 +19,16 @@ double dt = 0.01; // sample time for the controller
 // used in the apply joint effort service message as duration
 
 // global variable
-double g_kp = 0.00001;  // to be tuned
-double g_kv = 0.000003;  // to be tuned
+double g_kp = 0.0001;  // tuned for two_wheel_robot
+double g_kv = 0.00003;  // tuned for two_wheel_robot
 std::vector<double> g_left_wheel_poses;
 std::vector<double> g_left_wheel_vels;
 std::vector<double> g_left_wheel_poses_cmd;  // no need to specify velocity in command
 std::vector<double> g_right_wheel_poses;
 std::vector<double> g_right_wheel_vels;
 std::vector<double> g_right_wheel_poses_cmd;
-bool g_cmd_callback_started = false;  // cmd callback has been invoked at least once
+bool g_poses_callback_started = false;  // poses callback has been invoked at least once
+bool g_poses_cmd_callback_started = false;  // poses cmd callback has been invoked at least once
 
 // int to string converter
 std::string intToString(int a) {
@@ -38,12 +39,14 @@ std::string intToString(int a) {
 
 // callback for message from topic "two_wheel_poses"
 void twoWheelPosesCallback(const swarm_robot_msgs::two_wheel_poses& message_holder) {
+    if (!g_poses_callback_started)  // first time to be invoked
+        g_poses_callback_started = true;
     g_left_wheel_poses = message_holder.left_wheel_pos;
     g_left_wheel_vels = message_holder.left_wheel_vel;
     g_right_wheel_poses = message_holder.right_wheel_pos;
     g_right_wheel_vels = message_holder.right_wheel_vel;
     // check if cmd callback started yet
-    if (!g_cmd_callback_started) {
+    if (!g_poses_cmd_callback_started) {
         // let the cmd poses be the same as current poses
         g_left_wheel_poses_cmd = g_left_wheel_poses;
         g_right_wheel_poses_cmd = g_right_wheel_poses;
@@ -52,8 +55,8 @@ void twoWheelPosesCallback(const swarm_robot_msgs::two_wheel_poses& message_hold
 
 // callback for message from topic "two_wheel_poses_cmd"
 void twoWheelPosesCmdCallback(const swarm_robot_msgs::two_wheel_poses& message_holder) {
-    if (!g_cmd_callback_started)  // first time to be invoked
-        g_cmd_callback_started = true;
+    if (!g_poses_cmd_callback_started)  // first time to be invoked
+        g_poses_cmd_callback_started = true;
     g_left_wheel_poses_cmd = message_holder.left_wheel_pos;
     g_right_wheel_poses_cmd = message_holder.right_wheel_pos;
 }
@@ -97,6 +100,12 @@ int main(int argc, char **argv) {
     ros::Subscriber two_wheel_poses_cmd_subscriber =
         nh.subscribe("two_wheel_poses_cmd", 1, twoWheelPosesCmdCallback);
 
+    while (!g_poses_callback_started) {
+        ros::Duration(0.5).sleep();
+        ros::spinOnce();
+    }
+    ROS_INFO("topic message from two_wheel_poses is ready");
+
     // initialize a service client to apply joint effort
     ros::ServiceClient set_wheel_torque_client = nh.serviceClient<gazebo_msgs::ApplyJointEffort>(
         "/gazebo/apply_joint_effort");
@@ -115,7 +124,7 @@ int main(int argc, char **argv) {
     ROS_INFO("apply_joint_effort service exists");
 
     // initialize a service to change g_kp & g_kv, service name is "two_wheel_kpkv"
-    ros::ServiceServer service = nh.advertiseService("two_wheel_kpkv", twoWheelKpkvCallback);
+    ros::ServiceServer kpkv_service = nh.advertiseService("two_wheel_kpkv", twoWheelKpkvCallback);
 
     // prepare control variables
     ros::Rate rate_timer(1/dt);
@@ -127,7 +136,7 @@ int main(int argc, char **argv) {
     std::string right_motor_name;  // name of right motor
     // control loop
     while (ros::ok()) {
-        ROS_INFO("in the loop...");  // for debug
+        // ROS_INFO("in the loop...");  // for debug
         // apply joint effort loop
         for (int i=0; i<robot_quantity; i++) {
             // calculate the error
@@ -150,13 +159,13 @@ int main(int argc, char **argv) {
             // set left wheel torque
             set_wheel_torque_srv_msg.request.joint_name = left_motor_name;
             set_wheel_torque_srv_msg.request.effort = left_wheel_torque;
-            ROS_INFO_STREAM("left_wheel_torque " << left_wheel_torque);  // for debug
+            // ROS_INFO_STREAM("left_wheel_torque " << left_wheel_torque);  // for debug
             set_wheel_torque_client.call(set_wheel_torque_srv_msg);
 
             // set right wheel torque
             set_wheel_torque_srv_msg.request.joint_name = right_motor_name;
             set_wheel_torque_srv_msg.request.effort = right_wheel_torque;
-            ROS_INFO_STREAM("right_wheel_torque " << right_wheel_torque);  // for debug
+            // ROS_INFO_STREAM("right_wheel_torque " << right_wheel_torque);  // for debug
             set_wheel_torque_client.call(set_wheel_torque_srv_msg);
         }
 
