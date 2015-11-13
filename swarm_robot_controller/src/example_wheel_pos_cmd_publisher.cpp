@@ -1,4 +1,4 @@
-// the test interface for the minimal wheel pos controller
+// the test program for the minimal wheel pos controller
 
 // get wheel poses cmd from terminal
 // publishing these repacked information to topic "two_wheel_poses_cmd"

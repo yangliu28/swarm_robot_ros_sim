@@ -14,7 +14,10 @@ Cpp files:
 
 Launch file
 
-    pos_publisher.launch: include nodes of swarm_robot_pos_publisher, two_wheel_pos_publisher, two_wheel_pos_minimal_controller
+    two_wheel_robot_minimal_controller.launch
+        swarm_robot_pos_publisher
+        two_wheel_pos_publisher
+        two_wheel_pos_minimal_controller
 
 
 ## Example usage

@@ -33,5 +33,4 @@
   <!-- somehow node swarm_spawner_gazebo_client does not work in this or a standalone launch file -->
   <!-- will just use rosrun to bring in the robot swarm -->
 
-
 </launch>

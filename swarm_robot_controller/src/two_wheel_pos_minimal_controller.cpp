@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
         ROS_INFO("waiting for apply_joint_effort service");
         half_sec.sleep();
     }
-    ROS_INFO("apply_joint_effort service exists");
+    ROS_INFO("apply_joint_effort service is ready");
 
     // initialize a service to change g_kp & g_kv, service name is "two_wheel_kpkv"
     ros::ServiceServer kpkv_service = nh.advertiseService("two_wheel_kpkv", twoWheelKpkvCallback);

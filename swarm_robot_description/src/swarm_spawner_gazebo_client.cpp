@@ -44,10 +44,19 @@ std::string intToString(int a) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "swarm_spawner_gazebo_client");
     ros::NodeHandle nh;
-    // service client for service /gazebo/spawn_model
+    // service client for service /gazebo/spawn_urdf_model
     ros::ServiceClient client = nh.serviceClient<gazebo_msgs::SpawnModel>("/gazebo/spawn_urdf_model");
     gazebo_msgs::SpawnModel spawn_model_srv_msg;  // service message
     geometry_msgs::Pose model_pose;  // model pose message for service message
+
+    // make sure /gazebo/spawn_urdf_model service is ready
+    bool service_ready = false;
+    while (!service_ready) {
+        service_ready = ros::service::exists("/gazebo/spawn_urdf_model",true);
+        ROS_INFO("waiting for spawn_urdf_model service");
+        ros::Duration(0.5).sleep();
+    }
+    ROS_INFO("spawn_urdf_model service is ready");
 
     // get initialization information of robot swarm from parameter
     std::string robot_model_name;
@@ -108,7 +117,6 @@ int main(int argc, char **argv) {
             return 0;
         }
     }
-
     return 0;
 }
 
