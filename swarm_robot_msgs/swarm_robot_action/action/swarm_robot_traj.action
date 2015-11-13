@@ -4,6 +4,7 @@
 # goal definition
 float64[] x  # x coordinate of robots in the world
 float64[] y  # y coordinate of robots in the world
+duration time_from_start  # time need for this action
 ---
 # result definition
 int32[] err_code
