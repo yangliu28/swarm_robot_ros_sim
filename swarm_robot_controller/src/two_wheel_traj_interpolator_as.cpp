@@ -26,7 +26,8 @@
 const double dt = 0.01;  // interpolating resolution
 // minimal distance with goal position to interpolate
 // distance small than ds_min will be neglected, cube size of two_wheel_robot is 0.0254
-const double ds_min = 0.01;
+// this value should be set very low
+const double ds_min = 0.001;
 
 class TwoWheelTrajActionServer {
 public:
@@ -40,12 +41,12 @@ private:
 
     ros::NodeHandle nh_;  // a node handle is needed
 
-    // define a subscribers to topic "swarm_robot_poses" and "two_wheel_poses"
+    // declare a subscribers to topic "swarm_robot_poses" and "two_wheel_poses"
     ros::Subscriber swarm_robot_poses_subscriber;
     ros::Subscriber two_wheel_poses_subscriber;
-    // define a publisher to topic "two_wheel_poses_cmd"
+    // declare a publisher to topic "two_wheel_poses_cmd"
     ros::Publisher two_wheel_poses_cmd_publisher;
-    // define an action server
+    // declare an action server
     actionlib::SimpleActionServer<swarm_robot_action::swarm_robot_trajAction> as_;
     
     // messages
@@ -116,9 +117,20 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
 {
     ROS_INFO("in executeCb...");
 
-// if the goal position is too close, neglect it
-// rotation angle is between
+    // copy the goal message, avoid using "->" too much
+    double goal_x[] = goal -> x;
+    double goal_y[] = goal -> y;
+    double goal_time = goal -> time;
 
+    double distance[robot_quantity];
+    // calculate the cmd message for each robot
+    for (int i=0; i<robot_quantity; i++) {
+        // check if distance is small than ds_min
+
+    }
+
+// if the goal position is too close, neglect it
+// rotation angle is between -M_PI and M_PI
 
 // remember to ros::spinOnce at place that is necessary
 
