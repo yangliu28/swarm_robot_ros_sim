@@ -6,6 +6,9 @@
 
 // using a service to tune the kp&kv from the terminal
 
+// the robot model of two_wheel_robot has been modified that positive wheel increment 
+// of two wheels will both pushing the robot forward, and vice versa
+
 #include <ros/ros.h>
 #include <vector>
 #include <math.h>
@@ -19,8 +22,8 @@ double dt = 0.01; // sample time for the controller
 // used in the apply joint effort service message as duration
 
 // global variable
-double g_kp = 0.0001;  // tuned for two_wheel_robot
-double g_kv = 0.00003;  // tuned for two_wheel_robot
+double g_kp = 0.0001;  // already tuned for two_wheel_robot
+double g_kv = 0.00003;  // already tuned for two_wheel_robot
 std::vector<double> g_left_wheel_poses;
 std::vector<double> g_left_wheel_vels;
 std::vector<double> g_left_wheel_poses_cmd;  // no need to specify velocity in command
@@ -144,7 +147,7 @@ int main(int argc, char **argv) {
             right_wheel_pos_err = g_right_wheel_poses_cmd[i] - g_right_wheel_poses[i];
 
             // do not watch for periodicity, that is, making error in (-M_PI, M_PI)
-            // because wheels are continuous rotating, no need to be in that range
+            // because wheels are continuous rotating, angle could not always be in that range
 
             // calculate the torque
             left_wheel_torque = g_kp * left_wheel_pos_err - g_kv * g_left_wheel_vels[i];

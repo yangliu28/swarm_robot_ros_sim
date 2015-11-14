@@ -1,23 +1,39 @@
 // the trajectory action server for two wheel robot
 
-// considering the wheel trajectory of moving to a target position
-    // one seemingly simple way is first rotating to right angle
-    // then moving in straight line to the target
-// the strategy using here is, the center of the robot will always moving in a circular path
-// so that the wheel trajectory could be linearly interpolated
-// the center of the circular path is on the common axis of the two wheel
-// and the distances to both current robot position and target robot position are the same
-
-// there is a situation that target robot position is on the common axis
-// the strategy is compatible with this situation
-
 // communication includes
     // subscribe to topic "swarm_robot_poses" with message swarm_robot_poses.msg
     // subscribe to topic "two_wheel_poses" with message two_wheel_poses.msg
     // publish to topic "two_wheel_poses_cmd" with message two_wheel_poses.msg
     // host a action server "two_wheel_traj_action" with message swarm_robot_traj.action
 
+// there are different wheel trajectories of moving to a target position
+// Method 1:
+    // first rotating the robot to the direction of the target position
+    // then moving the robot in straight line to the target position
+    // pros:
+        // simple and straightforward wheel position increment calculation
+        // easy to debug the potential problems
+    // cons:
+        // ugly and inefficient to take two movements to moving to the target
+// Method 2:
+    // the path between start position and target position is circular
+    // the center of the circular path is on the common axis of the two wheels
+    // pros:
+        // taking only one movements to move to the target, much more elegant
+        // two wheel position are linearly interpolated because of this circular path
+    // cons:
+        // a bit difficult to calculate the increment of the wheel positions
+        // difficult to debug the algorithm for the wheel positions
+
+// for the convenience of wheel position calculation and debug, method 1 is implemented here
+
+// one significant problem of the controller of two_wheel_robot is that
+    // when one wheel is commanded rotating and the other is remained current position
+    // the static wheel will naturally rotating at the other direction because of inertia
+    // how to solve or avoid this problem? and make position control more precise
+
 #include <ros/ros.h>
+#include <math.h>
 #include <actionlib/server/simple_action_server.h>
 #include <swarm_robot_action/swarm_robot_trajAction.h>
 #include <swarm_robot_msgs/two_wheel_poses.h>
@@ -28,6 +44,9 @@ const double dt = 0.01;  // interpolating resolution
 // distance small than ds_min will be neglected, cube size of two_wheel_robot is 0.0254
 // this value should be set very low
 const double ds_min = 0.001;
+// half distance of two wheels
+// not a good way to get this value here
+const double half_wheel_dist = 0.0177;
 
 class TwoWheelTrajActionServer {
 public:
@@ -53,6 +72,9 @@ private:
     swarm_robot_msgs::swarm_robot_poses robot_poses_msg;  // current robot poses
     swarm_robot_msgs::two_wheel_poses wheel_poses_msg;  // current wheel poses
     swarm_robot_msgs::two_wheel_poses wheel_poses_cmd_msg;  // wheel poses command
+    // for trajectory interpolation
+    swarm_robot_msgs::two_wheel_poses wheel_poses_self_rotating;
+    swarm_robot_msgs::two_wheel_poses wheel_poses_line_moving;
     // action messages
     swarm_robot_action::swarm_robot_trajActionGoal goal_;
     swarm_robot_action::swarm_robot_trajActionResult result_;
@@ -122,10 +144,54 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
     double goal_y[] = goal -> y;
     double goal_time = goal -> time;
 
-    double distance[robot_quantity];
+
+
+// messages
+swarm_robot_msgs::swarm_robot_poses robot_poses_msg;  // current robot poses
+swarm_robot_msgs::two_wheel_poses wheel_poses_msg;  // current wheel poses
+swarm_robot_msgs::two_wheel_poses wheel_poses_cmd_msg;  // wheel poses command
+
+swarm_robot_msgs::two_wheel_poses wheel_poses_self_rotating;
+swarm_robot_msgs::two_wheel_poses wheel_poses_line_moving;
+
+
+
+    // the time for this two movements are linearly distributed according to the wheel path
+
+    double x_start;
+    double y_start;
+    double x_end;
+    double y_end;
+    double distance;
+    double angle_start;
+    double angle_end;
+    double angle_rotate;
     // calculate the cmd message for each robot
     for (int i=0; i<robot_quantity; i++) {
-        // check if distance is small than ds_min
+        x_start = robot_poses_msg.x[i];
+        y_start = robot_poses_msg.y[i];
+        x_end = goal_x[i];
+        y_end = goal_y[i];
+        distance = sqrt(pow((x_end - x_start), 2) + pow((y_end - y_start), 2));
+        // check if target position is too close
+        if (distance < ds_min) {
+            // copy the current wheel position
+            wheel_poses_self_rotating.left_wheel_pos[i] = wheel_poses_msg.left_wheel_pos[i];
+            wheel_poses_line_moving.left_wheel_pos[i] = wheel_poses_msg.left_wheel_pos[i];
+            wheel_poses_self_rotating.right_wheel_pos[i] = wheel_poses_msg.right_wheel_pos[i];
+            wheel_poses_line_moving.right_wheel_pos[i] = wheel_poses_msg.right_wheel_pos[i];
+        }
+        else {
+            // two stage movement calculation
+            // stage 1, self rotating calculation
+            angle_start = robot_poses_msg.angle[i];
+            angle_end = atan2(y_end - y_start, x_end - x_start);
+            angle_rotate = angle_end - angle_start;  // rotate from angle_start to angle_end
+            // angel_end and angle_start both belong to range of (-M_PI, M_PI)
+            
+        }
+
+
 
     }
 
@@ -133,10 +199,6 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
 // rotation angle is between -M_PI and M_PI
 
 // remember to ros::spinOnce at place that is necessary
-
-// not a precise way of motion control
-// when one wheel is rotating, the other wheel will naturally rotating the other direction
-// how to limit that effect, and make position control more precise
 
 
 }

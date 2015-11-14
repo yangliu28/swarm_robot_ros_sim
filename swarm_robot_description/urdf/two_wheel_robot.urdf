@@ -105,7 +105,7 @@
 <!--   this is very weird, the uncommented one is more reasonable
   but the uncommented one demonstrate the right position and rotation in gazebo -->
   <axis xyz="0 0 -1" />
-<!--   axis setting is important here, with the corresponding setting in right_motor
+<!--   important axis setting here, with the corresponding setting in right_motor
   two wheels are tuned at the same direction, which means
   when the same wheel position command is given, both wheels will make the same effect
   of pushing the robot forward or backward -->
