@@ -39,7 +39,7 @@
 #include <swarm_robot_msgs/two_wheel_poses.h>
 
 // interpolation parameters, change setup here
-const double dt = 0.01;  // interpolating resolution
+const double dt = 0.01;  // interpolating resolution on time
 // minimal distance with goal position to interpolate
 // distance small than ds_min will be neglected, cube size of two_wheel_robot is 0.0254
 // this value should be set very low
@@ -144,28 +144,18 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
     double goal_y[] = goal -> y;
     double goal_time = goal -> time;
 
-
-
-// messages
-swarm_robot_msgs::swarm_robot_poses robot_poses_msg;  // current robot poses
-swarm_robot_msgs::two_wheel_poses wheel_poses_msg;  // current wheel poses
-swarm_robot_msgs::two_wheel_poses wheel_poses_cmd_msg;  // wheel poses command
-
-swarm_robot_msgs::two_wheel_poses wheel_poses_self_rotating;
-swarm_robot_msgs::two_wheel_poses wheel_poses_line_moving;
-
-
-
-    // the time for this two movements are linearly distributed according to the wheel path
-
+    // variables needed in wheel trajectory calculation
     double x_start;
     double y_start;
     double x_end;
     double y_end;
     double distance;
-    double angle_start;
-    double angle_end;
-    double angle_rotate;
+    double angle_start;  // current angle of the robot
+    double angle_end;  // target angle of the robot
+    double angle_rotate;  // rotated angle of the robot
+    double wheel_incre_self_rotating;  // the wheel postion increment in self rotating stage
+    double wheel_incre_line_moving;  // the wheel position increment in line moving stage
+        // both increment are signed after been given values
     // calculate the cmd message for each robot
     for (int i=0; i<robot_quantity; i++) {
         x_start = robot_poses_msg.x[i];
@@ -177,26 +167,76 @@ swarm_robot_msgs::two_wheel_poses wheel_poses_line_moving;
         if (distance < ds_min) {
             // copy the current wheel position
             wheel_poses_self_rotating.left_wheel_pos[i] = wheel_poses_msg.left_wheel_pos[i];
-            wheel_poses_line_moving.left_wheel_pos[i] = wheel_poses_msg.left_wheel_pos[i];
             wheel_poses_self_rotating.right_wheel_pos[i] = wheel_poses_msg.right_wheel_pos[i];
+            wheel_poses_line_moving.left_wheel_pos[i] = wheel_poses_msg.left_wheel_pos[i];
             wheel_poses_line_moving.right_wheel_pos[i] = wheel_poses_msg.right_wheel_pos[i];
         }
         else {
             // two stage movement calculation
+            
             // stage 1, self rotating calculation
             angle_start = robot_poses_msg.angle[i];
             angle_end = atan2(y_end - y_start, x_end - x_start);
             angle_rotate = angle_end - angle_start;  // rotate from angle_start to angle_end
             // angel_end and angle_start both belong to range of (-M_PI, M_PI)
-            
+            // change angle_rotate into the same range (-M_PI, M_PI)
+            if (angle_rotate > M_PI)
+                angle_rotate = angle_rotate - 2 * M_PI;
+            if (angle_rotate < -M_PI)
+                angle_rotate = angle_rotate + 2 * M_PI;
+            bool robot_heading = true;  // whether the robot is heading or backing to the target
+            // it's not necessary to rotate the heading direction to the target every time
+            // because the two wheel robot can also moving backward
+            // change angle_rotate into the range (-M_PI/2, M_PI/2), use robot_heading to mark it
+            if (angle_rotate > M_PI/2) {
+                robot_heading = false;
+                angle_rotate = angle_rotate - M_PI;
+            }
+            if (angle_rotate < -M_PI/2) {
+                robot_heading = false;
+                angle_rotate = angle_rotate + M_PI;
+            }
+            // prepare wheel poses message base on current wheel positions
+            wheel_incre_self_rotating = angle_rotate * half_wheel_dist;
+            // left wheel move backward when rotating angle is positive
+            wheel_poses_self_rotating.left_wheel_pos[i] =
+                wheel_poses_msg.left_wheel_pos[i] - wheel_incre_self_rotating;
+            // right wheel move forward when rotating angle is positive
+            wheel_poses_self_rotating.right_wheel_pos[i] =
+                wheel_poses_msg.right_wheel_pos[i] + wheel_incre_self_rotating;
+
+            // stage 2, line moving calculation
+            // prepare wheel poses message bese on self rotated wheel positions
+            if (robot_heading)
+                wheel_incre_line_moving = distance;  // moving forward
+            else
+                wheel_incre_line_moving = -distance;  // moving backward
+            // both left and right wheel rotating at same direction
+            wheel_poses_line_moving.left_wheel_pos[i] = 
+                wheel_poses_self_rotating.left_wheel_pos[i] + wheel_incre_line_moving;
+            wheel_poses_line_moving.right_wheel_pos[i] = 
+                wheel_poses_self_rotating.right_wheel_pos[i] + wheel_incre_line_moving;
         }
-
-
-
     }
 
-// if the goal position is too close, neglect it
-// rotation angle is between -M_PI and M_PI
+    // trajectory interpolation
+    // time for the two movements are linearly distributed wrt the wheel rotation
+    double time_self_rotating;
+    double time_line_moving;
+    time_self_rotating = goal_time * (abs(wheel_incre_self_rotating)) /
+        (abs(wheel_incre_self_rotating) + abs(wheel_incre_line_moving));
+    time_line_moving = goal_time - time_self_rotating;
+
+
+// messages
+swarm_robot_msgs::swarm_robot_poses robot_poses_msg;  // current robot poses
+swarm_robot_msgs::two_wheel_poses wheel_poses_msg;  // current wheel poses
+swarm_robot_msgs::two_wheel_poses wheel_poses_cmd_msg;  // wheel poses command
+
+swarm_robot_msgs::two_wheel_poses wheel_poses_self_rotating;
+swarm_robot_msgs::two_wheel_poses wheel_poses_line_moving;
+
+
 
 // remember to ros::spinOnce at place that is necessary
 
