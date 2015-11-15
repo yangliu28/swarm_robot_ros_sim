@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     // get command loop
     while (ros::ok()) {
         std::cout << std::endl;
-        // get the index of the robot, chance ot quit
+        // get the index of the robot, chance to quit
         std::cout << "enter the index of the robot (0-based)" << std::endl
             << "(should be between 0 and " << intToString(robot_quantity - 1) << ", x to quit): ";
         std::cin >> in_index;
