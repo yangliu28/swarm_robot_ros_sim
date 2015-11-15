@@ -16,7 +16,7 @@ Cpp files:
 
     example_wheel_traj_interpolator_ac.cpp (for test)
 
-Launch file
+Launch file:
 
     two_wheel_robot_minimal_controller.launch
 
