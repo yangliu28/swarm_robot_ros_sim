@@ -1,4 +1,4 @@
-# swarm_robot_simulator
+# swarm_robot_simulation
 
 Your description goes here
 
