@@ -7,5 +7,7 @@
 
   <node name="two_wheel_pos_minimal_controller" pkg="swarm_robot_controller" type="two_wheel_pos_minimal_controller"/>
 
+  <node name="two_wheel_traj_interpolator_as" pkg="swarm_robot_controller" type="two_wheel_traj_interpolator_as"/>
+
 </launch>
 
