@@ -34,12 +34,14 @@
 
 #include <ros/ros.h>
 #include <math.h>
+#include <vector>
+#include <swarm_robot_msgs/swarm_robot_poses.h>
+#include <swarm_robot_msgs/two_wheel_poses.h>
 #include <actionlib/server/simple_action_server.h>
 #include <swarm_robot_action/swarm_robot_trajAction.h>
-#include <swarm_robot_msgs/two_wheel_poses.h>
 
 // interpolation parameters, change setup here
-const double dt = 0.01;  // interpolating resolution on time
+const double dt = 0.01;  // interpolating resolution of time
 // minimal distance with goal position to interpolate
 // distance small than ds_min will be neglected, cube size of two_wheel_robot is 0.0254
 // this value should be set very low
@@ -75,7 +77,7 @@ private:
     // for trajectory interpolation
     swarm_robot_msgs::two_wheel_poses wheel_poses_self_rotating;
     swarm_robot_msgs::two_wheel_poses wheel_poses_line_moving;
-    // action messages
+    // action messages, not used
     swarm_robot_action::swarm_robot_trajActionGoal goal_;
     swarm_robot_action::swarm_robot_trajActionResult result_;
     swarm_robot_action::swarm_robot_trajActionFeedback feedback_;
@@ -96,9 +98,16 @@ TwoWheelTrajActionServer::TwoWheelTrajActionServer(ros::NodeHandle* nodehandle):
 
     // initialize the subscribers
     b_robot_poses_cb_started = false;
-    swarm_robot_poses_subscriber = nh_.subscribe("swarm_robot_poses", 1, swarmRobotPosesCb);
-    b_poses_callback_started = false;
-    two_wheel_poses_subscriber = nh_.subscribe("two_wheel_poses", 1, twoWheelPosesCb);
+    swarm_robot_poses_subscriber = nh_.subscribe("swarm_robot_poses", 1,
+        &TwoWheelTrajActionServer::swarmRobotPosesCb, this);
+    // why compiler give error on the use of boost::bind here
+    // swarm_robot_poses_subscriber = nh_.subscribe("swarm_robot_poses", 1,
+    //     boost::bind(&TwoWheelTrajActionServer::swarmRobotPosesCb, this, _1));
+    b_wheel_poses_cb_started = false;
+    two_wheel_poses_subscriber = nh_.subscribe("two_wheel_poses", 1,
+        &TwoWheelTrajActionServer::twoWheelPosesCb, this);    
+    // two_wheel_poses_subscriber = nh_.subscribe("two_wheel_poses", 1,
+    //     boost::bind(&TwoWheelTrajActionServer::twoWheelPosesCb, this, _1));
     // initialize the publisher
     two_wheel_poses_cmd_publisher = nh_.advertise<swarm_robot_msgs::two_wheel_poses>("two_wheel_poses_cmd", 1);
 
@@ -106,8 +115,9 @@ TwoWheelTrajActionServer::TwoWheelTrajActionServer(ros::NodeHandle* nodehandle):
     bool get_name, get_quantity;
     get_name = nh_.getParam("/robot_model_name", robot_model_name);
     get_quantity = nh_.getParam("/robot_quantity", robot_quantity);
-    if (!(get_name && get_quantity))
-        return 0;  // return if fail to get parameter
+    // no return is allowed in constructor
+    // if (!(get_name && get_quantity))
+    //     return 0;  // return if fail to get parameter
 
     // make sure topics "swarm_robot_poses" and "two_wheel_poses" are active
     while (!(b_robot_poses_cb_started && b_wheel_poses_cb_started)) {
@@ -140,9 +150,20 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
     ROS_INFO("in executeCb...");
 
     // copy the goal message, avoid using "->" too much
-    double goal_x[] = goal -> x;
-    double goal_y[] = goal -> y;
+    std::vector<double> goal_x = goal -> x;
+    std::vector<double> goal_y = goal -> y;
+    // why the following does not compile
+    // double goal_x[robot_quantity];
+    // goal_x = goal -> x;
+    // double goal_y[robot_quantity];
+    // goal_y = goal -> y;
     double goal_time = goal -> time;
+
+    // get current robot poses and wheel poses
+    ros::spinOnce();  // update messages in the class
+    // create local variables to store current robot states
+    swarm_robot_msgs::swarm_robot_poses robot_poses_msg_ = robot_poses_msg;
+    swarm_robot_msgs::two_wheel_poses wheel_poses_msg_ = wheel_poses_msg;
 
     // variables needed in wheel trajectory calculation
     double x_start;
@@ -158,24 +179,24 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
         // both increment are signed after been given values
     // calculate the cmd message for each robot
     for (int i=0; i<robot_quantity; i++) {
-        x_start = robot_poses_msg.x[i];
-        y_start = robot_poses_msg.y[i];
+        x_start = robot_poses_msg_.x[i];
+        y_start = robot_poses_msg_.y[i];
         x_end = goal_x[i];
         y_end = goal_y[i];
         distance = sqrt(pow((x_end - x_start), 2) + pow((y_end - y_start), 2));
         // check if target position is too close
         if (distance < ds_min) {
             // copy the current wheel position
-            wheel_poses_self_rotating.left_wheel_pos[i] = wheel_poses_msg.left_wheel_pos[i];
-            wheel_poses_self_rotating.right_wheel_pos[i] = wheel_poses_msg.right_wheel_pos[i];
-            wheel_poses_line_moving.left_wheel_pos[i] = wheel_poses_msg.left_wheel_pos[i];
-            wheel_poses_line_moving.right_wheel_pos[i] = wheel_poses_msg.right_wheel_pos[i];
+            wheel_poses_self_rotating.left_wheel_pos[i] = wheel_poses_msg_.left_wheel_pos[i];
+            wheel_poses_self_rotating.right_wheel_pos[i] = wheel_poses_msg_.right_wheel_pos[i];
+            wheel_poses_line_moving.left_wheel_pos[i] = wheel_poses_msg_.left_wheel_pos[i];
+            wheel_poses_line_moving.right_wheel_pos[i] = wheel_poses_msg_.right_wheel_pos[i];
         }
         else {
             // two stage movement calculation
             
             // stage 1, self rotating calculation
-            angle_start = robot_poses_msg.angle[i];
+            angle_start = robot_poses_msg_.angle[i];
             angle_end = atan2(y_end - y_start, x_end - x_start);
             angle_rotate = angle_end - angle_start;  // rotate from angle_start to angle_end
             // angel_end and angle_start both belong to range of (-M_PI, M_PI)
@@ -200,10 +221,10 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
             wheel_incre_self_rotating = angle_rotate * half_wheel_dist;
             // left wheel move backward when rotating angle is positive
             wheel_poses_self_rotating.left_wheel_pos[i] =
-                wheel_poses_msg.left_wheel_pos[i] - wheel_incre_self_rotating;
+                wheel_poses_msg_.left_wheel_pos[i] - wheel_incre_self_rotating;
             // right wheel move forward when rotating angle is positive
             wheel_poses_self_rotating.right_wheel_pos[i] =
-                wheel_poses_msg.right_wheel_pos[i] + wheel_incre_self_rotating;
+                wheel_poses_msg_.right_wheel_pos[i] + wheel_incre_self_rotating;
 
             // stage 2, line moving calculation
             // prepare wheel poses message bese on self rotated wheel positions
@@ -226,21 +247,61 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
     time_self_rotating = goal_time * (abs(wheel_incre_self_rotating)) /
         (abs(wheel_incre_self_rotating) + abs(wheel_incre_line_moving));
     time_line_moving = goal_time - time_self_rotating;
+    // time control
+    ros::Rate rate_timer(1/dt);
 
+    double t_stream;
+    double fraction_of_range;
+    double wheel_rotate_range;
+    // first interpolating between wheel_poses_msg_ and wheel_poses_self_rotating
+    t_stream = 0.0;  // start with publish the start wheel poses
+    while (t_stream < time_self_rotating) {
+        fraction_of_range = t_stream / time_self_rotating;
+        // prepare wheel poses command message
+        for (int i=0; i<robot_quantity; i++) {
+            wheel_rotate_range = wheel_poses_self_rotating.left_wheel_pos[i] -
+                wheel_poses_msg_.left_wheel_pos[i];
+            wheel_poses_cmd_msg.left_wheel_pos[i] = wheel_poses_msg_.left_wheel_pos[i] +
+                fraction_of_range * wheel_rotate_range;
+            wheel_rotate_range = wheel_poses_self_rotating.right_wheel_pos[i] -
+                wheel_poses_msg_.right_wheel_pos[i];
+            wheel_poses_cmd_msg.right_wheel_pos[i] = wheel_poses_msg_.right_wheel_pos[i] +
+                fraction_of_range * wheel_rotate_range;
+        }
+        // publish this wheel poses command message
+        two_wheel_poses_cmd_publisher.publish(wheel_poses_cmd_msg);
+        t_stream = t_stream + dt;  // increase time by dt
+        rate_timer.sleep();
+    }
+    // end with publish the wheel_poses_self_rotating
+    two_wheel_poses_cmd_publisher.publish(wheel_poses_self_rotating);
+    rate_timer.sleep();
 
-// messages
-swarm_robot_msgs::swarm_robot_poses robot_poses_msg;  // current robot poses
-swarm_robot_msgs::two_wheel_poses wheel_poses_msg;  // current wheel poses
-swarm_robot_msgs::two_wheel_poses wheel_poses_cmd_msg;  // wheel poses command
+    // second interpolating between wheel_poses_self_rotating and wheel_poses_line_moving
+    t_stream = 0.0;
+    while (t_stream < time_line_moving) {
+        fraction_of_range = t_stream / time_line_moving;
+        // prepare wheel poses command message
+        for (int i=0; i<robot_quantity; i++) {
+            wheel_rotate_range = wheel_poses_line_moving.left_wheel_pos[i] -
+                wheel_poses_self_rotating.left_wheel_pos[i];
+            wheel_poses_cmd_msg.left_wheel_pos[i] = wheel_poses_self_rotating.left_wheel_pos[i] +
+                fraction_of_range * wheel_rotate_range;
+            wheel_rotate_range = wheel_poses_line_moving.right_wheel_pos[i] -
+                wheel_poses_self_rotating.right_wheel_pos[i];
+            wheel_poses_cmd_msg.right_wheel_pos[i] = wheel_poses_self_rotating.right_wheel_pos[i] +
+                fraction_of_range * wheel_rotate_range;
+        }
+        // publish this wheel poses command message
+        two_wheel_poses_cmd_publisher.publish(wheel_poses_cmd_msg);
+        t_stream = t_stream + dt;
+        rate_timer.sleep();
+    }
+    // end with publish the wheel_poses_line_moving
+    two_wheel_poses_cmd_publisher.publish(wheel_poses_line_moving);
+    rate_timer.sleep();
 
-swarm_robot_msgs::two_wheel_poses wheel_poses_self_rotating;
-swarm_robot_msgs::two_wheel_poses wheel_poses_line_moving;
-
-
-
-// remember to ros::spinOnce at place that is necessary
-
-
+    as_.setSucceeded();  // succeed on this action
 }
 
 
