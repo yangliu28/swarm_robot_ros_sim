@@ -49,6 +49,7 @@ const double ds_min = 0.001;
 // half distance of two wheels
 // not a good way to get this value here
 const double half_wheel_dist = 0.0177;
+const double wheel_radius = 0.015;
 
 class TwoWheelTrajActionServer {
 public:
@@ -119,6 +120,18 @@ TwoWheelTrajActionServer::TwoWheelTrajActionServer(ros::NodeHandle* nodehandle):
     // if (!(get_name && get_quantity))
     //     return 0;  // return if fail to get parameter
 
+    // resize swarm_robot_msgs that will be instantiate individually by element
+    // IMPORTANT HERE!!!
+    // robot_poses_msg and wheel_poses_msg are exempted from this
+    // because they will be initialize as a whole, in the callback
+    // the same with the robot_poses_msg_ and wheel_poses_msg_ in executeCb
+    wheel_poses_cmd_msg.left_wheel_pos.resize(robot_quantity);
+    wheel_poses_cmd_msg.right_wheel_pos.resize(robot_quantity);
+    wheel_poses_self_rotating.left_wheel_pos.resize(robot_quantity);
+    wheel_poses_self_rotating.right_wheel_pos.resize(robot_quantity);
+    wheel_poses_line_moving.left_wheel_pos.resize(robot_quantity);
+    wheel_poses_line_moving.right_wheel_pos.resize(robot_quantity);
+
     // make sure topics "swarm_robot_poses" and "two_wheel_poses" are active
     while (!(b_robot_poses_cb_started && b_wheel_poses_cb_started)) {
         ros::Duration(0.5).sleep();
@@ -157,7 +170,9 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
     // goal_x = goal -> x;
     // double goal_y[robot_quantity];
     // goal_y = goal -> y;
-    double goal_time = goal -> time;
+    double goal_time_cost = goal -> time_cost;
+
+    ROS_INFO("callback goes to here: 1");  // for debug
 
     // get current robot poses and wheel poses
     ros::spinOnce();  // update messages in the class
@@ -179,11 +194,13 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
         // both increment are signed after been given values
     // calculate the cmd message for each robot
     for (int i=0; i<robot_quantity; i++) {
+        ROS_INFO("callback goes to here: 2");  // for debug
         x_start = robot_poses_msg_.x[i];
         y_start = robot_poses_msg_.y[i];
         x_end = goal_x[i];
         y_end = goal_y[i];
         distance = sqrt(pow((x_end - x_start), 2) + pow((y_end - y_start), 2));
+        ROS_INFO_STREAM("value of distance: " << distance);  // for debug
         // check if target position is too close
         if (distance < ds_min) {
             // copy the current wheel position
@@ -191,14 +208,19 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
             wheel_poses_self_rotating.right_wheel_pos[i] = wheel_poses_msg_.right_wheel_pos[i];
             wheel_poses_line_moving.left_wheel_pos[i] = wheel_poses_msg_.left_wheel_pos[i];
             wheel_poses_line_moving.right_wheel_pos[i] = wheel_poses_msg_.right_wheel_pos[i];
+            // for the time cost calculation, randomly give value to these two variables
+            wheel_incre_self_rotating = 1.0;
+            wheel_incre_line_moving = 1.0;
         }
         else {
+            ROS_INFO("callback goes to here: 2.1");  // for debug
             // two stage movement calculation
             
             // stage 1, self rotating calculation
             angle_start = robot_poses_msg_.angle[i];
             angle_end = atan2(y_end - y_start, x_end - x_start);
             angle_rotate = angle_end - angle_start;  // rotate from angle_start to angle_end
+            ROS_INFO("callback goes to here: 2.1.1");  // for debug
             // angel_end and angle_start both belong to range of (-M_PI, M_PI)
             // change angle_rotate into the same range (-M_PI, M_PI)
             if (angle_rotate > M_PI)
@@ -206,6 +228,7 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
             if (angle_rotate < -M_PI)
                 angle_rotate = angle_rotate + 2 * M_PI;
             bool robot_heading = true;  // whether the robot is heading or backing to the target
+            ROS_INFO("callback goes to here: 2.1.2");  // for debug
             // it's not necessary to rotate the heading direction to the target every time
             // because the two wheel robot can also moving backward
             // change angle_rotate into the range (-M_PI/2, M_PI/2), use robot_heading to mark it
@@ -217,21 +240,25 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
                 robot_heading = false;
                 angle_rotate = angle_rotate + M_PI;
             }
+            ROS_INFO("callback goes to here: 2.1.3");  // for debug
             // prepare wheel poses message base on current wheel positions
-            wheel_incre_self_rotating = angle_rotate * half_wheel_dist;
+            wheel_incre_self_rotating = angle_rotate * half_wheel_dist / wheel_radius;
+            ROS_INFO("callback goes to here: 2.1.4");  // for debug
             // left wheel move backward when rotating angle is positive
             wheel_poses_self_rotating.left_wheel_pos[i] =
                 wheel_poses_msg_.left_wheel_pos[i] - wheel_incre_self_rotating;
+            ROS_INFO("callback goes to here: 2.1.5");  // for debug
             // right wheel move forward when rotating angle is positive
             wheel_poses_self_rotating.right_wheel_pos[i] =
                 wheel_poses_msg_.right_wheel_pos[i] + wheel_incre_self_rotating;
 
+            ROS_INFO("callback goes to here: 2.2");  // for debug
             // stage 2, line moving calculation
             // prepare wheel poses message bese on self rotated wheel positions
             if (robot_heading)
-                wheel_incre_line_moving = distance;  // moving forward
+                wheel_incre_line_moving = distance / wheel_radius;  // moving forward
             else
-                wheel_incre_line_moving = -distance;  // moving backward
+                wheel_incre_line_moving = -distance / wheel_radius;  // moving backward
             // both left and right wheel rotating at same direction
             wheel_poses_line_moving.left_wheel_pos[i] = 
                 wheel_poses_self_rotating.left_wheel_pos[i] + wheel_incre_line_moving;
@@ -240,13 +267,15 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
         }
     }
 
+    ROS_INFO("callback goes to here: 3");  // for debug
+
     // trajectory interpolation
     // time for the two movements are linearly distributed wrt the wheel rotation
     double time_self_rotating;
     double time_line_moving;
-    time_self_rotating = goal_time * (abs(wheel_incre_self_rotating)) /
+    time_self_rotating = goal_time_cost * (abs(wheel_incre_self_rotating)) /
         (abs(wheel_incre_self_rotating) + abs(wheel_incre_line_moving));
-    time_line_moving = goal_time - time_self_rotating;
+    time_line_moving = goal_time_cost - time_self_rotating;
     // time control
     ros::Rate rate_timer(1/dt);
 
@@ -256,6 +285,7 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
     // first interpolating between wheel_poses_msg_ and wheel_poses_self_rotating
     t_stream = 0.0;  // start with publish the start wheel poses
     while (t_stream < time_self_rotating) {
+        ROS_INFO("callback goes to here: 4");  // for debug
         fraction_of_range = t_stream / time_self_rotating;
         // prepare wheel poses command message
         for (int i=0; i<robot_quantity; i++) {
@@ -280,6 +310,7 @@ void TwoWheelTrajActionServer::executeCb(const actionlib::
     // second interpolating between wheel_poses_self_rotating and wheel_poses_line_moving
     t_stream = 0.0;
     while (t_stream < time_line_moving) {
+        ROS_INFO("callback goes to here: 5");  // for debug
         fraction_of_range = t_stream / time_line_moving;
         // prepare wheel poses command message
         for (int i=0; i<robot_quantity; i++) {
