@@ -1,6 +1,6 @@
 // the test program for two_wheel_traj_interpolator_as
 
-// subscribe to topic "swarm_robot_poses" to get current wheel poses
+// subscribe to topic "swarm_robot_poses" to get current robot poses
 // get robot poses cmd manually from terminal
 // sending these messages as a goal to action server "two_wheel_traj_action"
 
