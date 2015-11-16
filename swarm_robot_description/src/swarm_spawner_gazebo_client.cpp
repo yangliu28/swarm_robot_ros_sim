@@ -1,4 +1,5 @@
 // spawn robot swarm at customized quantity, positions and orientation using gazebo service
+// this node is to be invoked in a launch file for environment setting of gazebo
 
 // all parameters are from parameter server
     // robot model: /robot_model_path
@@ -13,6 +14,8 @@
 #include <gazebo_msgs/SpawnModel.h>
 #include <geometry_msgs/Pose.h>
 #include <Eigen/Geometry>
+
+// #include <stdio.h>  // for getting the program path
 
 using namespace Eigen;
 
@@ -58,6 +61,9 @@ int main(int argc, char **argv) {
     }
     ROS_INFO("spawn_urdf_model service is ready");
 
+    // commenting out the following line also works fine, just feel safe to wait for a while
+    ros::Duration(1.0).sleep();  // wait for gazebo to be initialized
+
     // get initialization information of robot swarm from parameter
     std::string robot_model_name;
     std::string robot_model_path;
@@ -65,21 +71,26 @@ int main(int argc, char **argv) {
     double half_range;
     bool get_name, get_path, get_quantity, get_range;
     get_name = nh.getParam("/robot_model_name", robot_model_name);
+    // absolute path described from the root directory
     get_path = nh.getParam("/robot_model_path", robot_model_path);
     get_quantity = nh.getParam("/robot_quantity", robot_quantity);
     get_range = nh.getParam("/half_range", half_range);
     if (!(get_name && get_path && get_quantity && get_range))
         return 0;  // return if fail to get parameters
 
-    // prepare: the xml for service call, read urdf into string
+    // prepare the xml for service call, read urdf into string
     std::ifstream inXml;
     std::stringstream strStream;
     std::string xmlStr;
-    // this is an absolute path, which means this node has to be invoked at ros_ws directory
+    // finds out the path when launching the launch file is "/home/yang/.ros"
+    // instead of the path of the terminal when running launch file
+    // char the_path[256];
+    // getcwd(the_path, 255);
+    // ROS_INFO_STREAM(the_path);
     inXml.open(robot_model_path.c_str());  // why is c_str() needed?
     strStream << inXml.rdbuf();
     xmlStr = strStream.str();
-    // prepare: the service message
+    // prepare the service message
     spawn_model_srv_msg.request.model_xml = xmlStr;
     spawn_model_srv_msg.request.initial_pose.position.z = 0.0;
     spawn_model_srv_msg.request.initial_pose.orientation.x = 0.0;
@@ -104,7 +115,6 @@ int main(int argc, char **argv) {
         spawn_model_srv_msg.request.initial_pose.orientation.z = qf.z();
         spawn_model_srv_msg.request.initial_pose.orientation.w = qf.w();
 
-        // for debug
         ROS_INFO_STREAM("random x position of " << index_string << " is " << randomNumbers(i, 0));
         ROS_INFO_STREAM("random y position of " << index_string << " is " << randomNumbers(i, 1));        
         ROS_INFO_STREAM("random rotation angle of " << index_string << " is " << randomNumbers(i, 2));

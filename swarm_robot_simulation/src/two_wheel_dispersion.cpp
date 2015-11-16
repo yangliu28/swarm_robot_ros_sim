@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
     // the loop of optimizing robot position for dispersion
     int iteration_index = 0;
     while (ros::ok()) {
-        ROS_INFO("");  // blank line
+        ROS_INFO_STREAM("");  // blank line
         ROS_INFO_STREAM("iteration index: " << iteration_index);  // iteration index
 
         ros::spinOnce();  // let robot positions update, will be used later
