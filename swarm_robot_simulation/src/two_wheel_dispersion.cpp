@@ -27,7 +27,7 @@ const double feedback_ratio = 0.382;  // smaller than 1 to make it stable, golde
 // two wheel robot specification, really should get these values in another way
 const double half_wheel_dist = 0.0177;
 const double wheel_radius = 0.015;
-const double wheel_speed = 1.0;  // rad*s-1, for the calculation of time cost of the action
+const double wheel_speed = 2.0;  // rad*s-1, for the calculation of time cost of the action
 
 // callback for message from topic "swarm_robot_poses"
 void swarmRobotPosesCb(const swarm_robot_msgs::swarm_robot_poses& message_holder) {
@@ -83,13 +83,13 @@ int main(int argc, char **argv) {
     double distance[robot_quantity][robot_quantity];  // two dimensional array to store distance
     double distance_sort[robot_quantity][robot_quantity];
     int index_sort[robot_quantity][robot_quantity];
-    ROS_INFO("runtime goes to here: 1");  // for debug
     // the loop of optimizing robot position for dispersion
+    int iteration_index = 0;
     while (ros::ok()) {
-        ROS_INFO_STREAM("");
-        ROS_INFO_STREAM("in the loop...");  // for debug
-        ROS_INFO("runtime goes to here: 2");  // for debug
-        ros::spinOnce();  // update robot positions
+        ROS_INFO("");  // blank line
+        ROS_INFO_STREAM("iteration index: " << iteration_index);  // iteration index
+
+        ros::spinOnce();  // let robot positions update, will be used later
 
         // calculate the distance between robots
         for (int i=0; i<robot_quantity; i++) {
@@ -101,7 +101,6 @@ int main(int argc, char **argv) {
             }
         }
 
-        ROS_INFO("runtime goes to here: 3");  // for debug
         // initialize distance_sort and index_sort
         for (int i=0; i<robot_quantity; i++)
             for (int j=0; j<robot_quantity; j++) {
@@ -128,18 +127,14 @@ int main(int argc, char **argv) {
             }
         }
 
-        ROS_INFO("runtime goes to here: 4");  // for debug
         // check whether the closest is itself
         for (int i=0; i<robot_quantity; i++) {
             if (index_sort[i][0] != i) {
                 ROS_WARN("error in the sorting of robot distance");
-                ROS_INFO_STREAM("the host index is " << i);  // debug here
-                ROS_INFO_STREAM("the agent index is " << index_sort[i][0]);  // debug here
                 return 0;
             }
         }
 
-        ROS_INFO("runtime goes to here: 5");  // for debug
         // find all the neighbors that will be used in the force feedback control
         // the algorithm used here is the same with the algorithm implemented in matlab before
         // no matter how far away one robot is with others, 3 closest neighbors will be counted
@@ -152,7 +147,6 @@ int main(int argc, char **argv) {
                 neighbor_num[i] = neighbor_num[i] + 1;
         }
 
-        ROS_INFO("runtime goes to here: 6");  // for debug
         // calculate displacement of each robot
         double displacement_x[robot_quantity];  // displacement in x
         double displacement_y[robot_quantity];  // displacement in y
@@ -171,7 +165,6 @@ int main(int argc, char **argv) {
             }
         }
 
-        ROS_INFO("runtime goes to here: 7");  // for debug
         // prepare the goal message
         double displacement_average = 0.0;  // for the calculation of time cost
         goal.x.resize(robot_quantity);  // important here, otherwise runtime error
@@ -188,8 +181,8 @@ int main(int argc, char **argv) {
         // use M_PI/3 to represent time spent on self rotating
         goal.time_cost = displacement_average / wheel_radius / wheel_speed + 
             M_PI/3 * half_wheel_dist / wheel_radius / wheel_speed;
+        ROS_INFO_STREAM("time cost for this action: " << goal.time_cost << "(second)");
 
-        ROS_INFO("runtime goes to here: 8");  // for debug
         // send out goal
         action_client.sendGoal(goal);
         // wait for expected duration plus some tolerance (2 seconds)
