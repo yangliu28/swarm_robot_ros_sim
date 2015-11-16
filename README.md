@@ -40,13 +40,21 @@ Have ROS installed and workspace setup.(missing a lot of details)
 Clone this package into ~/ros_ws/src and build using catkin_make.
 
 ## Demo tests
-In each terminal:
+In terminal 1, launch the gazebo environment setting:
 
 ```
 roslaunch swarm_robot_description initialize.launch robot_quantity:=10
-rosrun swarm_robot_description swarm_spawner_gazebo_client
+```
+
+In terminal 2, launch the controllers for two wheel robot:
+
+```
 roslaunch swarm_robot_controller two_wheel_robot_controller.launch
-(to command robot by position) rosrun swarm_robot_controller example_wheel_traj_interpolator_ac
+```
+
+In terminal 3:
+
+```
 rosrun swarm_robot_simulation two_wheel_dispersion
 ```
 
