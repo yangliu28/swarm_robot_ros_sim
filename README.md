@@ -52,7 +52,7 @@ roslaunch swarm_robot_controller two_wheel_robot_controller.launch
 ```
 running the dispersion test (the parameters are default values):
 ```
-rosrun swarm_robot_simulation two_wheel_dispersion _spring_length:= 0.7 _wheel_speed:= 2.0
+rosrun swarm_robot_simulation two_wheel_dispersion _spring_length:=0.7 _wheel_speed:=2.0
 ```
 
 ## Contributing
