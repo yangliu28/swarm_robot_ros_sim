@@ -122,10 +122,16 @@ int main(int argc, char **argv) {
         // call service and get response
         bool call_service = client.call(spawn_model_srv_msg);  // call the server
         if (call_service) {
-            if (spawn_model_srv_msg.response.success)
-                std::cout << robot_model_name << "_" << index_string << " has been spawned" << std::endl;
-            else
-                std::cout << robot_model_name << "_" << index_string << " spawn failed" << std::endl;
+            if (spawn_model_srv_msg.response.success) {
+                ROS_INFO_STREAM(robot_model_name << "_" << index_string << " has been spawned");
+                ROS_INFO_STREAM("");  // make a blank line
+                // std::cout << robot_model_name << "_" << index_string << " has been spawned" << std::endl;
+            }
+            else {
+                ROS_INFO_STREAM(robot_model_name << "_" << index_string << " spawn failed");
+                ROS_INFO_STREAM("");  // make a blank line
+                // std::cout << robot_model_name << "_" << index_string << " spawn failed" << std::endl;
+            }
         }
         else {
             ROS_ERROR("Failed to connect with gazebo server");
