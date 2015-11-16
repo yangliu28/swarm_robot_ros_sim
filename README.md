@@ -42,17 +42,17 @@ Clone this package into ~/ros_ws/src and build using catkin_make.
 ## Demo tests
 In different terminals:
 
-launch the gazebo environment setting (more setting can be found in this launch file):
+launch the gazebo environment setting (the parameter are default values):
 ```
-roslaunch swarm_robot_description initialize.launch robot_quantity:=10
+roslaunch swarm_robot_description initialize.launch robot_quantity:=10 half_range:=1.0
 ```
 launch the controllers for two wheel robot:
 ```
 roslaunch swarm_robot_controller two_wheel_robot_controller.launch
 ```
-running the dispersion test:
+running the dispersion test (the parameters are default values):
 ```
-rosrun swarm_robot_simulation two_wheel_dispersion
+rosrun swarm_robot_simulation two_wheel_dispersion _spring_length:= 0.7 _wheel_speed:= 2.0
 ```
 
 ## Contributing

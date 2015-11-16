@@ -51,6 +51,20 @@ int main(int argc, char **argv) {
     if (!(get_name && get_quantity))
         return 0;  // return if fail to get parameter
 
+    // get settings for this simulation from private parameter
+    // parameter: spring_length
+    bool get_spring_length = nh.getParam("spring_length", spring_length);
+    if (get_spring_length)
+        ROS_INFO_STREAM("using spring_length passed in: " << spring_length);
+    else
+        ROS_INFO_STREAM("using default spring_length: " << spring_length);
+    // parameter: wheel_speed
+    bool get_wheel_speed = nh.getParam("wheel_speed", wheel_speed);
+    if (get_wheel_speed)
+        ROS_INFO_STREAM("using wheel_speed passed in: " << wheel_speed);
+    else
+        ROS_INFO_STREAM("using default wheel_speed: " << wheel_speed);
+
     // initialize a subscriber to topic "swarm_robot_poses"
     ros::Subscriber swarm_robot_poses_subscriber = nh.subscribe("swarm_robot_poses", 1, swarmRobotPosesCb);
 
@@ -76,8 +90,6 @@ int main(int argc, char **argv) {
     }
     // if here, then connected to the server
     ROS_INFO("connected to action server");
-
-    // all the above are copied from example_wheel_traj_interpolator_ac
 
     // variables for the loop
     double distance[robot_quantity][robot_quantity];  // two dimensional array to store distance
