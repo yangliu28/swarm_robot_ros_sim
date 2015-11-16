@@ -47,6 +47,7 @@ roslaunch swarm_robot_description initialize.launch robot_quantity:=10
 rosrun swarm_robot_description swarm_spawner_gazebo_client
 roslaunch swarm_robot_controller two_wheel_robot_controller.launch
 (to command robot by position) rosrun swarm_robot_controller example_wheel_traj_interpolator_ac
+rosrun swarm_robot_simulation two_wheel_dispersion
 ```
 
 ## Contributing
