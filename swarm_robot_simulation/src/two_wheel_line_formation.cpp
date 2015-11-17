@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
         ros::Duration(0.5).sleep();
         ros::spinOnce();
     }
-    std::cout << "topic message from swarm_robot_poses is ready" << std::endl;
+    ROS_INFO("topic message from swarm_robot_poses is ready");
 
     // initialize an action client
     actionlib::SimpleActionClient<swarm_robot_action::swarm_robot_trajAction> action_client(
@@ -139,6 +139,7 @@ int main(int argc, char **argv) {
     // the loop of optimizing robot position for line formation
     int iteration_index = 0;
     while (ros::ok()) {
+        iteration_index = iteration_index + 1;
         ROS_INFO_STREAM("");  // blank line
         ROS_INFO_STREAM("iteration_index: " << iteration_index);  // iteration index
 
@@ -195,21 +196,38 @@ int main(int argc, char **argv) {
             neighbor_num_in_range[i] = 2;  // there will be at least 2 neighbors
             // following statement is a bit different from dispersion simulation
             // avoiding visiting element in distance_sort that is out of index
-            while (neighbor_num_in_range[i] <= robot_quantity-1) {
-                if (distance_sort[i][neighbor_num_in_range[i]+1] < sensing_range)
-                    neighbor_num_in_range[i] = neighbor_num_in_range[i] + 1;
-                else
+            // really not nice code below, any better way to do this?
+            while (true) {
+                neighbor_num_in_range[i] = neighbor_num_in_range[i] + 1;
+                if (neighbor_num_in_range[i] <= robot_quantity-1)
+                    if (distance_sort[i][neighbor_num_in_range[i]] < sensing_range)
+                        continue;
+                    else {
+                        neighbor_num_in_range[i] = neighbor_num_in_range[i] - 1;
+                        break;
+                    }
+                else {
+                    neighbor_num_in_range[i] = neighbor_num_in_range[i] - 1;
                     break;
+                }
             }
+            // ERROR below: neighbor_num will increase by 1 when out of while, not wanted
+            // while (neighbor_num_in_range[i] <= robot_quantity-1) {
+            //     if (distance_sort[i][neighbor_num_in_range[i]+1] < sensing_range)
+            //         neighbor_num_in_range[i] = neighbor_num_in_range[i] + 1;
+            //     else
+            //         break;
+            // }
+            
+            // ROS_INFO_STREAM("neighbor number of " << i << ": " << neighbor_num_in_range[i]);  // debug
         }
 
         // find out the fitted line from neighbors in sensing range
-        std::vector<double> x;
-        std::vector<double> y;
-        std::vector<double> fit_temp;
-        fit_temp.resize(2);  // for result from linear fitting
+        std::vector<double> fit_temp;  // // for result from linear fitting
         double fitting_result[robot_quantity][2];  // store the fitting result
         for (int i=0; i<robot_quantity; i++) {
+            std::vector<double> x;
+            std::vector<double> y;
             x.resize(neighbor_num_in_range[i]+1);  // neighbors plus itself
             y.resize(neighbor_num_in_range[i]+1);
             for (int j=0; j<neighbor_num_in_range[i]+1; j++) {
@@ -217,6 +235,7 @@ int main(int argc, char **argv) {
                 y[j] = g_robot_y[index_sort[i][j]];
             }
             fit_temp = linear_fitting(x, y);
+            ROS_INFO_STREAM("fit of " << i << ": " << fit_temp[0] << ", " << fit_temp[1]);
             fitting_result[i][0] = fit_temp[0];  // the slope
             fitting_result[i][1] = fit_temp[1];  // the intercept
         }

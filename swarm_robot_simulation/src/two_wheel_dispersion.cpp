@@ -98,6 +98,7 @@ int main(int argc, char **argv) {
     // the loop of optimizing robot position for dispersion
     int iteration_index = 0;
     while (ros::ok()) {
+        iteration_index = iteration_index + 1;
         ROS_INFO_STREAM("");  // blank line
         ROS_INFO_STREAM("iteration index: " << iteration_index);  // iteration index
 
@@ -155,9 +156,27 @@ int main(int argc, char **argv) {
         int neighbor_num[robot_quantity];  // the number of valid neighbors
         for (int i=0; i<robot_quantity; i++) {
             neighbor_num[i] = 3;  // there are at least 3 neighbors
-            while (distance_sort[i][neighbor_num[i]+1] < upper_limit && neighbor_num[i] <= 6)
+            while (true) {
                 neighbor_num[i] = neighbor_num[i] + 1;
+                if (neighbor_num[i] <= 6)
+                    if (distance_sort[i][neighbor_num[i]] < upper_limit)
+                        continue;
+                    else {
+                        neighbor_num[i] = neighbor_num[i] - 1;
+                        break;
+                    }
+                else {
+                    neighbor_num[i] = neighbor_num[i] - 1;
+                    break;
+                }
+            }
+            // ROS_INFO_STREAM("neighbor number of " << i << ": " << neighbor_num[i]);
         }
+        // for (int i=0; i<robot_quantity; i++) {
+        //     neighbor_num[i] = 3;  // there are at least 3 neighbors
+        //     while (distance_sort[i][neighbor_num[i]+1] < upper_limit && neighbor_num[i] <= 6)
+        //         neighbor_num[i] = neighbor_num[i] + 1;
+        // }
 
         // calculate displacement of each robot
         double displacement_x[robot_quantity];  // displacement in x
@@ -193,7 +212,7 @@ int main(int argc, char **argv) {
         // use M_PI/3 to represent time spent on self rotating
         goal.time_cost = displacement_average / wheel_radius / wheel_speed + 
             M_PI/3 * half_wheel_dist / wheel_radius / wheel_speed;
-        ROS_INFO_STREAM("time cost for this action: " << goal.time_cost << "(second)");
+        ROS_INFO_STREAM("time cost for action: " << goal.time_cost << "(second)");
 
         // send out goal
         action_client.sendGoal(goal);

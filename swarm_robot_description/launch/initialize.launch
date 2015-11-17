@@ -36,7 +36,7 @@
   <param name="enclosure" command="cat '$(find swarm_robot_description)/urdf/enclosure_halfside_3.0.urdf'"/>
 
   <!-- spawn the enclosure in gazebo -->
-  <node name="enclosure" pkg="gazebo_ros" type="spawn_model" args="-file $(find swarm_robot_description)/urdf/enclosure_halfside_3.0.urdf -urdf -model enclosure_halfside_3.0"/>
+  <!-- <node name="enclosure" pkg="gazebo_ros" type="spawn_model" args="-file $(find swarm_robot_description)/urdf/enclosure_halfside_3.0.urdf -urdf -model enclosure_halfside_3.0"/> -->
 
   <!-- spawn multiple robot models in gazebo -->
   <!-- output= "screen" means all the ROS_INFO will show on the screen instead of a log, useful -->
