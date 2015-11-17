@@ -54,20 +54,19 @@ void swarmRobotPosesCb(const swarm_robot_msgs::swarm_robot_poses& message_holder
         g_robot_poses_cb_started = true;
     g_robot_x = message_holder.x;
     g_robot_y = message_holder.y;
-    g_robot_angle = message_holder.angle;
 }
 
 // linear fitting function, revised from C++11 implementation
 // linear fitting here using y=kx+b form, which means vertical line is not supported
 // but it's very unlikely to happen with double precision data, we'll see
 std::vector<double> linear_fitting(const std::vector<double>& x, const std::vector<double>& y) {
-    const auto n = x.size();
-    const auto s_x = std::accumulate(x.begin(), x.end(), 0.0);
-    const auto s_y = std::accumulate(y.begin(), y.end(), 0.0);
-    const auto s_xx = std::inner_product(x.begin(), x.end(), x.begin(), 0.0);
-    const auto s_xy = std::inner_product(x.begin(), x.end(), y.begin(), 0.0);
-    const auto slope = (n * s_xy - s_x * s_y) / (n * s_xx - s_x * s_x);
-    const auto intercept = (s_y - slope * s_x) / n;
+    const double n = x.size();
+    const double s_x = std::accumulate(x.begin(), x.end(), 0.0);
+    const double s_y = std::accumulate(y.begin(), y.end(), 0.0);
+    const double s_xx = std::inner_product(x.begin(), x.end(), x.begin(), 0.0);
+    const double s_xy = std::inner_product(x.begin(), x.end(), y.begin(), 0.0);
+    const double slope = (n * s_xy - s_x * s_y) / (n * s_xx - s_x * s_x);
+    const double intercept = (s_y - slope * s_x) / n;
     std::vector<double> a;
     a.push_back(slope);
     a.push_back(intercept);
@@ -75,7 +74,7 @@ std::vector<double> linear_fitting(const std::vector<double>& x, const std::vect
 }
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "dispersion");
+    ros::init(argc, argv, "two_wheel_line_formation");
     ros::NodeHandle nh;
 
     // get initialization message of robot swarm from parameter server
@@ -257,7 +256,7 @@ int main(int argc, char **argv) {
             // get the parallel part of this displacement
             fitting_unit_vector[0] = 1 / sqrt(1 + fitting_result[i][0]);
             fitting_unit_vector[1] = fitting_result[i][0] / sqrt(1 + fitting_result[i][0]);
-            if (abs(atan(fitting_result[i][0]) - atan(parallel_displacement[i][1],
+            if (abs(atan(fitting_result[i][0]) - atan(parallel_displacement[i][1] /
                 parallel_displacement[i][0])) < M_PI/2) {
                 // angle between displacement vector and unit vector is less than M_PI/2
                 parallel_distance = fitting_unit_vector[0] * parallel_displacement[i][0] +

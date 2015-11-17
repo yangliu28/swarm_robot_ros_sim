@@ -19,7 +19,7 @@ std::vector<double> g_robot_angle;
 bool g_robot_poses_cb_started = false;
 
 // simulation control parameters
-const double spring_length = 0.7;  // spring length when not compressed or extended
+double spring_length = 0.7;  // spring length, may change from parameter server
 const double upper_limit_ratio = 0.30;  // upper limit part relative to spring length
 const double upper_limit = spring_length * (1 + upper_limit_ratio);
 const double feedback_ratio = 0.382;  // smaller than 1 to make it stable, golden ratio ;)
@@ -27,7 +27,7 @@ const double feedback_ratio = 0.382;  // smaller than 1 to make it stable, golde
 // two wheel robot specification, really should get these values in another way
 const double half_wheel_dist = 0.0177;
 const double wheel_radius = 0.015;
-const double wheel_speed = 2.0;  // rad*s-1, for the calculation of time cost of the action
+double wheel_speed = 2.0;  // rad*s-1, for time cost of the action, may change also
 
 // callback for message from topic "swarm_robot_poses"
 void swarmRobotPosesCb(const swarm_robot_msgs::swarm_robot_poses& message_holder) {
@@ -39,7 +39,7 @@ void swarmRobotPosesCb(const swarm_robot_msgs::swarm_robot_poses& message_holder
 }
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "dispersion");
+    ros::init(argc, argv, "two_wheel_dispersion");
     ros::NodeHandle nh;
 
     // get initialization message of robot swarm from parameter server
