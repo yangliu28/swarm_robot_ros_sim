@@ -34,11 +34,11 @@ bool g_robot_poses_cb_started = false;
 
 // simulation control parameters
 // for getting which robots will be included in line fitting
-const double sensing_range = 3.0;  // the upper limit for distance with another robot
+double sensing_range = 3.0;  // sensing range, may change from parameter
 // for perpendicular displacement calculation
 const double perpendicular_feedback_ratio = 0.618;  // golden ratio
 // for parallel displacement calculation
-const double spring_length = 0.7;  // spring length when not compressed or extended
+double spring_length = 0.7;  // spring length, may change
 const double upper_limit_ratio = 0.30;  // upper limit part relative to spring length
 const double upper_limit = spring_length * (1 + upper_limit_ratio);
 const double parallel_feedback_ratio = 0.382;  // verse golden ratio
@@ -46,7 +46,7 @@ const double parallel_feedback_ratio = 0.382;  // verse golden ratio
 // two wheel robot specification, really should get these values in another way
 const double half_wheel_dist = 0.0177;
 const double wheel_radius = 0.015;
-const double wheel_speed = 2.0;  // rad*s-1, for the calculation of time cost of the action
+double wheel_speed = 2.0;  // rad*s-1, for time cost of the action, may change
 
 // callback for message from topic "swarm_robot_poses"
 void swarmRobotPosesCb(const swarm_robot_msgs::swarm_robot_poses& message_holder) {
@@ -87,6 +87,18 @@ int main(int argc, char **argv) {
         return 0;  // return if fail to get parameter
 
     // get settings for this simulation from private parameter
+    // parameter: sensing_range
+    bool get_sensing_range = nh.getParam("sensing_range", sensing_range);
+    if (get_sensing_range)
+        ROS_INFO_STREAM("using sensing_range passed in: " << sensing_range);
+    else
+        ROS_INFO_STREAM("using default sensing_range: " << sensing_range);
+    // parameter: spring_length
+    bool get_spring_length = nh.getParam("spring_length", spring_length);
+    if (get_spring_length)
+        ROS_INFO_STREAM("using spring_length passed in: " << spring_length);
+    else
+        ROS_INFO_STREAM("using default spring_length: " << spring_length);
     // parameter: wheel_speed
     bool get_wheel_speed = nh.getParam("wheel_speed", wheel_speed);
     if (get_wheel_speed)
