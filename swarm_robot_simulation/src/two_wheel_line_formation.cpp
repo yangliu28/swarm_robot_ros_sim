@@ -5,9 +5,24 @@
 // create an action client to "two_wheel_traj_action"
 
 // line formation algorithm:
-// 
+// there is a sensing range for each robot, should be relatively large
+// the position of in-range robots will be used to fitted in a line (line formation)
+// then the robot will move in two directions added together
+// one direction is perpendicular to the line and heading to it
+// the feedback is the distance between the robot and line, the ratio is less than 1
+// the other direction is parallel to the line, feedback is the force from spring model
+// derived the same way in dispersion simulation, except we only take the parallel part
+
+// how to understand?
+// with feedback in two direction to control the robot
+// the one perpendicular to the line aims to make all robot move closer to the line
+// the one parallel to the line aims to make all robot uniformly distributed on the line
 
 #include <ros/ros.h>
+#include <algorithm>
+#include <numeric>
+#include <vector>
+#include <math.h>
 #include <swarm_robot_msgs/swarm_robot_poses.h>
 #include <actionlib/client/simple_action_client.h>
 #include <swarm_robot_action/swarm_robot_trajAction.h>
@@ -18,8 +33,15 @@ std::vector<double> g_robot_y;
 bool g_robot_poses_cb_started = false;
 
 // simulation control parameters
+// for getting which robots will be included in line fitting
 const double sensing_range = 3.0;  // the upper limit for distance with another robot
-
+// for perpendicular displacement calculation
+const double perpendicular_feedback_ratio = 0.618;  // golden ratio
+// for parallel displacement calculation
+const double spring_length = 0.7;  // spring length when not compressed or extended
+const double upper_limit_ratio = 0.30;  // upper limit part relative to spring length
+const double upper_limit = spring_length * (1 + upper_limit_ratio);
+const double parallel_feedback_ratio = 0.382;  // verse golden ratio
 
 // two wheel robot specification, really should get these values in another way
 const double half_wheel_dist = 0.0177;
@@ -33,6 +55,23 @@ void swarmRobotPosesCb(const swarm_robot_msgs::swarm_robot_poses& message_holder
     g_robot_x = message_holder.x;
     g_robot_y = message_holder.y;
     g_robot_angle = message_holder.angle;
+}
+
+// linear fitting function, revised from C++11 implementation
+// linear fitting here using y=kx+b form, which means vertical line is not supported
+// but it's very unlikely to happen with double precision data, we'll see
+std::vector<double> linear_fitting(const std::vector<double>& x, const std::vector<double>& y) {
+    const auto n = x.size();
+    const auto s_x = std::accumulate(x.begin(), x.end(), 0.0);
+    const auto s_y = std::accumulate(y.begin(), y.end(), 0.0);
+    const auto s_xx = std::inner_product(x.begin(), x.end(), x.begin(), 0.0);
+    const auto s_xy = std::inner_product(x.begin(), x.end(), y.begin(), 0.0);
+    const auto slope = (n * s_xy - s_x * s_y) / (n * s_xx - s_x * s_x);
+    const auto intercept = (s_y - slope * s_x) / n;
+    std::vector<double> a;
+    a.push_back(slope);
+    a.push_back(intercept);
+    return a;
 }
 
 int main(int argc, char **argv) {
@@ -82,13 +121,195 @@ int main(int argc, char **argv) {
     // if here, then connected to the server
     ROS_INFO("connected to action server");
 
+    // variables for the loop
+    double distance[robot_quantity][robot_quantity];
+    double distance_sort[robot_quantity][robot_quantity];
+    int index_sort[robot_quantity][robot_quantity];
+    // the loop of optimizing robot position for line formation
+    int iteration_index = 0;
+    while (ros::ok()) {
+        ROS_INFO_STREAM("");  // blank line
+        ROS_INFO_STREAM("iteration_index: " << iteration_index);  // iteration index
 
+        ros::spinOnce();  // let the robot positions update
 
+        // calculate the distance between robots
+        for (int i=0; i<robot_quantity; i++) {
+            for (int j=i; j<robot_quantity; j++) {
+                distance[i][j] = sqrt(pow(g_robot_x[i] - g_robot_x[j], 2) +
+                    pow(g_robot_y[i] - g_robot_y[j], 2));
+                if (i != j)  // not in diagonal axis
+                    distance[j][i] = distance[i][j];  // symmetrical matrix
+            }
+        }
 
+        // initialize distance_sort and index_sort
+        for (int i=0; i<robot_quantity; i++)
+            for (int j=0; j<robot_quantity; j++) {
+                distance_sort[i][j] = distance[i][j];
+                index_sort[i][j] = j;
+            }
+        // sort the distances and get sorted index
+        double distance_temp;
+        int index_temp;
+        for (int i=0; i<robot_quantity; i++) {
+            for (int j=0; j<robot_quantity-1; j++) {
+                for (int k=0; k<robot_quantity-1-j; k++) {
+                    if (distance_sort[i][k] > distance_sort[i][k+1]) {
+                        // switch value between distance_sort[i][k] and distance_sort[i][k+1] 
+                        distance_temp = distance_sort[i][k];
+                        distance_sort[i][k] = distance_sort[i][k+1];
+                        distance_sort[i][k+1] = distance_temp;
+                        // switch value between index_sort[i][k] and index[i][k+1]
+                        index_temp = index_sort[i][k];
+                        index_sort[i][k] = index_sort[i][k+1];
+                        index_sort[i][k+1] = index_temp;
+                    }
+                }
+            }
+        }
 
+        // check whether the closest is itself
+        for (int i=0; i<robot_quantity; i++) {
+            if (index_sort[i][0] != i) {
+                ROS_WARN("error in the sorting of robot distance");
+                return 0;
+            }
+        }
 
+        // find all the neighbors in the sensing range
+        int neighbor_num_in_range[robot_quantity];  // number of neighbors in range
+        for (int i=0; i<robot_quantity; i++) {
+            // with at least 2 neighbors and itself to do line fitting
+            neighbor_num_in_range[i] = 2;  // there will be at least 2 neighbors
+            // following statement is a bit different from dispersion simulation
+            // avoiding visiting element in distance_sort that is out of index
+            while (neighbor_num_in_range[i] <= robot_quantity-1) {
+                if (distance_sort[i][neighbor_num_in_range[i]+1] < sensing_range)
+                    neighbor_num_in_range[i] = neighbor_num_in_range[i] + 1;
+                else
+                    break;
+            }
+        }
 
+        // find out the fitted line from neighbors in sensing range
+        std::vector<double> x;
+        std::vector<double> y;
+        std::vector<double> fit_temp;
+        fit_temp.resize(2);  // for result from linear fitting
+        double fitting_result[robot_quantity][2];  // store the fitting result
+        for (int i=0; i<robot_quantity; i++) {
+            x.resize(neighbor_num_in_range[i]+1);  // neighbors plus itself
+            y.resize(neighbor_num_in_range[i]+1);
+            for (int j=0; j<neighbor_num_in_range[i]+1; j++) {
+                x[j] = g_robot_x[index_sort[i][j]];
+                y[j] = g_robot_y[index_sort[i][j]];
+            }
+            fit_temp = linear_fitting(x, y);
+            fitting_result[i][0] = fit_temp[0];  // the slope
+            fitting_result[i][1] = fit_temp[1];  // the intercept
+        }
 
+        // calculate displacement for the perpendicular part
+        double perpendicular_displacement[robot_quantity][2];  // for x and y
+        for (int i=0; i<robot_quantity; i++) {
+            // calculate the vector from robot position to pedal on the line
+            // do some geometry you will find out
+            // (-(ax+b-y)/(2a), (ax+b-y)/2)
+            perpendicular_displacement[i][0] = perpendicular_feedback_ratio *
+                (-(fitting_result[i][0] * g_robot_x[i] + fitting_result[i][1] - g_robot_y[i]) /
+                    (2 * fitting_result[i][0]));
+            perpendicular_displacement[i][1] = perpendicular_feedback_ratio *
+                (fitting_result[i][0] * g_robot_x[i] + fitting_result[i][1] - g_robot_y[i]) / 2;
+        }
+
+        // find all the neighbors that will be used in the force feedback control
+        int neighbor_num_spring[robot_quantity];  // neighbor numbers for force feedback
+        for (int i=0; i<robot_quantity; i++) {
+            // least number of neighbors is 2, situation different from dispersion
+            neighbor_num_spring[i] = 2;
+            while (neighbor_num_spring[i] <= robot_quantity-1) {
+                if (distance_sort[i][neighbor_num_spring[i]+1] < upper_limit)
+                    neighbor_num_spring[i] = neighbor_num_spring[i] + 1;
+                else
+                    break;
+            }
+        }
+
+        // calculate displacement for the parallel part
+        double parallel_displacement[robot_quantity][2];  // for x and y
+        double distance_diff;
+        double fitting_unit_vector[2];  // a unit vector parallel to the fitted line
+        double parallel_distance;
+        for (int i=0; i<robot_quantity; i++) {
+            parallel_displacement[i][0] = 0.0;
+            parallel_displacement[i][1] = 0.0;
+            for (int j=1; j<=neighbor_num_spring[i]; j++) {
+                distance_diff = distance_sort[i][j] - spring_length;
+                // adding the spring effect of all the neighbors
+                parallel_displacement[i][0] = parallel_displacement[i][0] +
+                    parallel_feedback_ratio * distance_diff * (g_robot_x[index_sort[i][j]] -
+                        g_robot_x[i]) / distance_sort[i][j];
+                parallel_displacement[i][1] = parallel_displacement[i][1] +
+                    parallel_feedback_ratio * distance_diff * (g_robot_y[index_sort[i][j]] -
+                        g_robot_y[i]) / distance_sort[i][j];
+            }
+            // get the parallel part of this displacement
+            fitting_unit_vector[0] = 1 / sqrt(1 + fitting_result[i][0]);
+            fitting_unit_vector[1] = fitting_result[i][0] / sqrt(1 + fitting_result[i][0]);
+            if (abs(atan(fitting_result[i][0]) - atan(parallel_displacement[i][1],
+                parallel_displacement[i][0])) < M_PI/2) {
+                // angle between displacement vector and unit vector is less than M_PI/2
+                parallel_distance = fitting_unit_vector[0] * parallel_displacement[i][0] +
+                    fitting_unit_vector[1] * parallel_displacement[i][1];
+                parallel_displacement[i][0] = parallel_distance * fitting_unit_vector[0];
+                parallel_displacement[i][1] = parallel_distance * fitting_unit_vector[1];
+            }
+            else {
+                // angle is more than M_PI/2
+                fitting_unit_vector[0] = -fitting_unit_vector[0];  // reverse the direction
+                fitting_unit_vector[1] = -fitting_unit_vector[1];
+                parallel_distance = fitting_unit_vector[0] * parallel_displacement[i][0] +
+                    fitting_unit_vector[1] * parallel_displacement[i][1];
+                parallel_displacement[i][0] = parallel_distance * fitting_unit_vector[0];
+                parallel_displacement[i][1] = parallel_distance * fitting_unit_vector[1];
+            }
+        }
+
+        // prepare goal message
+        double displacement_average = 0.0;  // for the calculation of time cost
+        goal.x.resize(robot_quantity);  // important here, otherwise runtime error
+        goal.y.resize(robot_quantity);
+        for (int i=0; i<robot_quantity; i++) {
+            // combine two displacement together
+            goal.x[i] = g_robot_x[i] + perpendicular_displacement[i][0] +
+                parallel_displacement[i][0];
+            goal.y[i] = g_robot_y[i] + perpendicular_displacement[i][1] +
+                parallel_displacement[i][1];
+            displacement_average = displacement_average +
+                sqrt(pow(perpendicular_displacement[i][0] + parallel_displacement[i][0], 2) +
+                    pow(perpendicular_displacement[i][1] + parallel_displacement[i][1], 2));
+        }
+        // this is the real average displacement
+        displacement_average = displacement_average / robot_quantity;
+        // use displacement_average to represent time spent on line movement
+        // use M_PI/3 to represent time spent on self rotating
+        goal.time_cost = displacement_average / wheel_radius / wheel_speed + 
+            M_PI/3 * half_wheel_dist / wheel_radius / wheel_speed;
+        ROS_INFO_STREAM("time cost for this action: " << goal.time_cost << "(second)");
+
+        // send out goal
+        action_client.sendGoal(goal);
+        // wait for expected duration plus some tolerance (2 seconds)
+        bool finish_before_timeout = action_client.waitForResult(ros::Duration(goal.time_cost + 2.0));
+        if (!finish_before_timeout) {
+            ROS_WARN("this action is not done...timeout");
+            return 0;
+        }
+        else {
+            ROS_INFO("this action is done.");
+        }
+    }
     return 0;
 }
 
