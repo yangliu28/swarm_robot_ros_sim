@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
                 y[j] = g_robot_y[index_sort[i][j]];
             }
             fit_temp = linear_fitting(x, y);
-            ROS_INFO_STREAM("fit of " << i << ": " << fit_temp[0] << ", " << fit_temp[1]);
+            // ROS_INFO_STREAM("fit of " << i << ": " << fit_temp[0] << ", " << fit_temp[1]);
             fitting_result[i][0] = fit_temp[0];  // the slope
             fitting_result[i][1] = fit_temp[1];  // the intercept
         }
