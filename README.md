@@ -61,3 +61,19 @@ rosrun swarm_robot_simulation two_wheel_line_formation _sensing_range:=3.0 _spri
 
 ## Contributing
 
+## Problems and to-do list
+Currently there is no impact avoiding mechanism.
+
+Parameter server for swarm robot rviz visualization.
+
+Sensor simulator to be added, distance calculation.
+
+Load other robot model directly from 3D model file.
+
+Mesh for fancier visual effect of robot model in gazebo.
+
+There is no 100 node for 100 robot, remap.
+
+Circle formation: fitting neighbors into constant radius circle, calculate displacement into the circle, calculate displacement parallel the circle. (use this method to fit any other line shape)
+
+There is no difference between my swarm research and galtech or kilobot, each robot will get all the location information of all other robots. (sounds like boring...)
