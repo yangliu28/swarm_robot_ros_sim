@@ -72,7 +72,9 @@ Load other robot model directly from 3D model file.
 
 Mesh for fancier visual effect of robot model in gazebo.
 
-There is no 100 node for 100 robot, remap.
+There is no 100 node for 100 robot, remap to improve.
+
+Check turtle bot for dynamics.
 
 Circle formation: fitting neighbors into constant radius circle, calculate displacement into the circle, calculate displacement parallel the circle. (use this method to fit any other line shape)
 
