@@ -22,7 +22,8 @@ bool g_robot_poses_cb_started = false;
 double spring_length = 0.7;  // spring length, may change from parameter server
 const double upper_limit_ratio = 0.30;  // upper limit part relative to spring length
 const double upper_limit = spring_length * (1 + upper_limit_ratio);
-const double feedback_ratio = 0.382;  // smaller than 1 to make it stable, golden ratio ;)
+const double feedback_ratio = 0.382/2.0;  // smaller than 1 to make it stable, golden ratio ;)
+// half the feedback_ratio to alleviate vibration
 
 // two wheel robot specification, really should get these values in another way
 const double half_wheel_dist = 0.0177;
