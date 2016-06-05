@@ -43,9 +43,9 @@ rosrun swarm_robot_simulation two_wheel_line_formation _sensing_range:=3.0 _spri
 ## Contributing
 
 ## Problems and to-do list
-Currently there is no collision avoiding mechanism.
+Currently there is no collision avoidance mechanism.
 
-Parameter server for swarm robot rviz visualization.
+Parameter server for sensor data rviz visualization.
 
 Sensor simulator to be added, distance calculation.
 
