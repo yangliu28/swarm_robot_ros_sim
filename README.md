@@ -40,7 +40,7 @@ test 2: line formation (parameter values are default)
 rosrun swarm_robot_simulation two_wheel_line_formation _sensing_range:=3.0 _spring_length:=0.7 _wheel_speed:=2.0
 ```
 
-## Contributing
+## Contribution
 
 
 ## ~~Project proposal for EECS 600~~ (obsolete)
