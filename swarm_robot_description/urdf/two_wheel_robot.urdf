@@ -35,6 +35,69 @@
 </gazebo>
 
 
+<link name="front_sphere">
+  <inertial>
+    <mass value="0.0000001" />
+    <origin xyz="0 0 0" />
+    <inertia ixx="0.00000000001" ixy="0.0" ixz="0.0"
+      iyy="0.00000000001" iyz="0.0"
+      izz="0.00000000001" />
+  </inertial>
+
+  <!-- make the sphere invisible -->
+<!--   <visual>
+    <origin xyz="0 0 0" />
+    <geometry>
+      <sphere radius="0.002298" />
+    </geometry>
+  </visual> -->
+
+  <collision>
+    <origin xyz="0 0 0" />
+    <geometry>
+      <sphere radius="0.002298" />
+    </geometry>
+  </collision>
+</link>
+
+<joint name="front_support" type="fixed">
+  <parent link="body_link" />
+  <child link="front_sphere" />
+  <origin xyz="0.0104 0 0" rpy="0 0 0" />
+</joint>
+
+
+<link name="back_sphere">
+  <inertial>
+    <mass value="0.0000001" />
+    <origin xyz="0 0 0" />
+    <inertia ixx="0.00000000001" ixy="0.0" ixz="0.0"
+      iyy="0.00000000001" iyz="0.0"
+      izz="0.00000000001" />
+  </inertial>
+
+<!--   <visual>
+    <origin xyz="0 0 0" />
+    <geometry>
+      <sphere radius="0.002298" />
+    </geometry>
+  </visual> -->
+
+  <collision>
+    <origin xyz="0 0 0" />
+    <geometry>
+      <sphere radius="0.002298" />
+    </geometry>
+  </collision>
+</link>
+
+<joint name="back_support" type="fixed">
+  <parent link="body_link" />
+  <child link="back_sphere" />
+  <origin xyz="-0.0104 0 0" rpy="0 0 0" />
+</joint>
+
+
 <link name="left_wheel">
   <inertial>
     <mass value="0.002" />

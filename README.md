@@ -16,9 +16,7 @@ A swarm robot simulation environment for ROS Indigo to be used with Gazebo.
 This project starts after investigating several swarm robot platforms like Kilobot, E-puck, Jasmine, Alice, etc, and work on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while, it would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. This project is also for the purpose of learning various tools and programming in ROS.
 
 ## Setup
-Have ROS installed and workspace setup.(missing a lot of details)
-
-Clone this package into ~/ros_ws/src and build using catkin_make.
+Have ROS Indigo installed and workspace setup. Clone this package at ~/ros_ws/src and build using catkin_make.
 
 ## Demo tests
 In different terminals:
