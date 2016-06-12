@@ -1,28 +1,14 @@
 # swarm_robot_description
 
-This package is for the swarm robot model files, test field model files and launch files. To make a classification of these files:
+This package is for the swarm robot models.
 
-robot models:
+Collada files for the wheels with stripe pattern are under urdf/mesh/. They are not used because to make a circular wheel rotate smoothly on the ground, at least hundreds of line segments are needed to approximate the circle (the only way to make circle in SketchUp), therefore producing a lot of vertices and edges, which lay a heavy burden on physics solver in Gazebo.
 
-* two_wheel_robot.urdf
+How to generate collada file for smooth circular wheel?
 
-test field models:
 
-* unit_enclosure.urdf
 
-* unit_enclosures_c_door.urdf
+Is the cylinder in link tag also meshed from line segments? (very likely)
 
-* maze_0.urdf
+change the support ball radius.
 
-launch files:
-
-* two_wheel_robot.launch
-
-world file in gazebo for using in launch file:
-
-* initialize.world
-
-## Example usage
-
-## Running tests/demos
-    

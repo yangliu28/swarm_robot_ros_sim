@@ -61,6 +61,11 @@
   </collision>
 </link>
 
+<gazebo reference="front_sphere">
+  <mu1>0.0</mu1>
+  <mu2>0.0</mu2>
+</gazebo>
+
 <joint name="front_support" type="fixed">
   <parent link="body_link" />
   <child link="front_sphere" />
@@ -93,6 +98,11 @@
   </collision>
 </link>
 
+<gazebo reference="back_sphere">
+  <mu1>0.0</mu1>
+  <mu2>0.0</mu2>
+</gazebo>
+
 <joint name="back_support" type="fixed">
   <parent link="body_link" />
   <child link="back_sphere" />
@@ -112,26 +122,57 @@
   <visual>
     <origin xyz="0 0 0.002" />
     <geometry>
-      <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left.dae"/>
-    </geometry>
-<!--     <geometry>
       <cylinder radius="0.015" length="0.004" />
-    </geometry> -->
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left.dae"/> -->
+    </geometry>
   </visual>
 
   <collision>
     <origin xyz="0 0 0.002" />
     <geometry>
-      <!-- <cylinder radius="0.015" length="0.004" /> -->
-      <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left.dae"/>
+      <cylinder radius="0.015" length="0.004" />
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left.dae"/> -->
     </geometry>
   </collision>
 </link>
 
 <gazebo reference="left_wheel">
+  <material>Gazebo/Grey</material>
   <mu1>1</mu1>
   <mu2>0.5</mu2>
 </gazebo>
+
+
+<link name="left_wheel_mark">
+  <inertial>
+    <mass value="0.0000001" />
+    <origin xyz="0 0 0" />
+    <inertia ixx="0.00000000001" ixy="0.0" ixz="0.0"
+      iyy="0.00000000001" iyz="0.0"
+      izz="0.00000000001" />
+  </inertial>
+
+  <visual>
+    <origin xyz="0 0 0" />
+    <geometry>
+      <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left_mark.dae"/>
+    </geometry>
+  </visual>
+
+  <collision>
+    <origin xyz="0 0 0" />
+    <geometry>
+      <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left_mark.dae"/>
+    </geometry>
+  </collision>
+</link>
+
+<joint name="left_wheel_mark_fixed" type="continuous">
+  <parent link="left_wheel" />
+  <child link="left_wheel_mark" />
+  <origin xyz="0 0 0.014" rpy="0 0 0" />
+  <axis xyz="0 0 1" />
+</joint>
 
 
 <link name="right_wheel">
@@ -146,20 +187,22 @@
   <visual>
     <origin xyz="0 0 0.002" />
     <geometry>
-      <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right.dae"/>
+      <cylinder radius="0.015" length="0.004" />
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right.dae"/> -->
     </geometry>
   </visual>
 
   <collision>
     <origin xyz="0 0 0.002" />
     <geometry>
-      <!-- <cylinder radius="0.015" length="0.004" /> -->
-      <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right.dae"/>
+      <cylinder radius="0.015" length="0.004" />
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right.dae"/> -->
     </geometry>
   </collision>
 </link>
 
 <gazebo reference="right_wheel">
+  <material>Gazebo/Grey</material>
   <mu1>1</mu1>
   <mu2>0.5</mu2>
 </gazebo>
@@ -168,10 +211,7 @@
 <joint name="left_motor" type="continuous">
   <parent link="body_link" />
   <child link="left_wheel" />
-  <!-- <origin xyz="0 -0.0177 0.0127" rpy="-1.5708 0 0" /> -->
-  <origin xyz="0 0.0177 0.0127" rpy="1.5708 0 0" />
-<!--   this is very weird, the uncommented one is more reasonable
-  but the uncommented one demonstrate the right position and rotation in gazebo -->
+  <origin xyz="0 0.0137 0.0127" rpy="-1.5708 0 0" />
   <axis xyz="0 0 -1" />
 <!--   important axis setting here, with the corresponding setting in right_motor
   two wheels are tuned at the same direction, which means
@@ -184,7 +224,7 @@
   <parent link="body_link" />
   <child link="right_wheel" />
   <!-- <origin xyz="0 0.0177 0.0127" rpy="1.5708 0 0" /> -->
-  <origin xyz="0 -0.0177 0.0127" rpy="-1.5708 0 0" />
+  <origin xyz="0 -0.0137 0.0127" rpy="1.5708 0 0" />
   <axis xyz="0 0 1" />
 
 </joint>
