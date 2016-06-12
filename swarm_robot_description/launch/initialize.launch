@@ -19,7 +19,7 @@
 
   <!-- we resume the logic in empty_world.launch -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find swarm_robot_description)/gazebo/initialize.world"/>
+    <arg name="world_name" value="$(find swarm_robot_description)/gazebo/empty.world"/>
     <arg name="debug" value="$(arg debug)" />
     <arg name="gui" value="true" />
     <arg name="paused" value="$(arg paused)"/>

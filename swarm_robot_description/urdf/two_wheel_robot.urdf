@@ -35,6 +35,7 @@
 </gazebo>
 
 
+<!-- support the robot body from swing front and back -->
 <link name="front_sphere">
   <inertial>
     <mass value="0.0000001" />
@@ -67,6 +68,7 @@
 </joint>
 
 
+<!-- back sphere support -->
 <link name="back_sphere">
   <inertial>
     <mass value="0.0000001" />
