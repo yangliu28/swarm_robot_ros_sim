@@ -49,14 +49,14 @@
 <!--   <visual>
     <origin xyz="0 0 0" />
     <geometry>
-      <sphere radius="0.002298" />
+      <sphere radius="0.002297" />
     </geometry>
   </visual> -->
 
   <collision>
     <origin xyz="0 0 0" />
     <geometry>
-      <sphere radius="0.002298" />
+      <sphere radius="0.002297" />
     </geometry>
   </collision>
 </link>
@@ -86,14 +86,14 @@
 <!--   <visual>
     <origin xyz="0 0 0" />
     <geometry>
-      <sphere radius="0.002298" />
+      <sphere radius="0.002297" />
     </geometry>
   </visual> -->
 
   <collision>
     <origin xyz="0 0 0" />
     <geometry>
-      <sphere radius="0.002298" />
+      <sphere radius="0.002297" />
     </geometry>
   </collision>
 </link>
@@ -122,28 +122,31 @@
   <visual>
     <origin xyz="0 0 0.002" />
     <geometry>
-      <cylinder radius="0.015" length="0.004" />
-      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left.dae"/> -->
+      <!-- <cylinder radius="0.015" length="0.004" /> -->
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left_hd.dae"/> -->
+      <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left_ld.dae"/>
     </geometry>
   </visual>
 
+  <!-- collision can always be simple as a cylinder -->
   <collision>
     <origin xyz="0 0 0.002" />
     <geometry>
       <cylinder radius="0.015" length="0.004" />
-      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left.dae"/> -->
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left_hd.dae"/> -->
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left_ld.dae"/> -->
     </geometry>
   </collision>
 </link>
 
 <gazebo reference="left_wheel">
-  <material>Gazebo/Grey</material>
+  <!-- <material>Gazebo/Grey</material> -->
   <mu1>1</mu1>
   <mu2>0.5</mu2>
 </gazebo>
 
 
-<link name="left_wheel_mark">
+<!-- <link name="left_wheel_mark">
   <inertial>
     <mass value="0.0000001" />
     <origin xyz="0 0 0" />
@@ -172,7 +175,7 @@
   <child link="left_wheel_mark" />
   <origin xyz="0 0 0.014" rpy="0 0 0" />
   <axis xyz="0 0 1" />
-</joint>
+</joint> -->
 
 
 <link name="right_wheel">
@@ -187,8 +190,9 @@
   <visual>
     <origin xyz="0 0 0.002" />
     <geometry>
-      <cylinder radius="0.015" length="0.004" />
-      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right.dae"/> -->
+      <!-- <cylinder radius="0.015" length="0.004" /> -->
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right_hd.dae"/> -->
+      <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right_ld.dae"/>
     </geometry>
   </visual>
 
@@ -196,13 +200,14 @@
     <origin xyz="0 0 0.002" />
     <geometry>
       <cylinder radius="0.015" length="0.004" />
-      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right.dae"/> -->
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right_hd.dae"/> -->
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right_ld.dae"/> -->
     </geometry>
   </collision>
 </link>
 
 <gazebo reference="right_wheel">
-  <material>Gazebo/Grey</material>
+  <!-- <material>Gazebo/Grey</material> -->
   <mu1>1</mu1>
   <mu2>0.5</mu2>
 </gazebo>
