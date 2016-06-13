@@ -15,8 +15,6 @@
 #include <geometry_msgs/Pose.h>
 #include <Eigen/Geometry>
 
-// #include <stdio.h>  // for getting the program path
-
 using namespace Eigen;
 
 Matrix<double, Dynamic, 3> randomGenerator(int quantity, double half_range) {

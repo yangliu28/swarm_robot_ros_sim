@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
-  <!-- these are the arguments you can pass this launch file -->
+  <!-- following are the arguments you can pass this launch file -->
   <!-- gazebo environment -->
   <arg name="paused" default="false"/>
   <arg name="debug" default="false"/>
@@ -9,18 +9,19 @@
   <arg name="gui" default="true"/>
   <arg name="headless" default="false"/>
   <!-- experimental setup of the robots -->
-  <arg name="robot_model_name" default="two_wheel_robot"/>
-  <!-- attention here!!!
+  <arg name="robot_name" default="two_wheel_robot"/>
+  <arg name="robot_quantity" default="10"/>
+  <arg name="half_range" default="1.0"/>
+
+  <!-- obsoleted -->
+  <!-- notes for robot model file path:
   the running path when this launch file is launched is "/home/yang/.ros"
   in no matter what path you launch the launch file
   so the robot model path should better be an absolute one from root directory
   and should not be changed when the file location is not changed
   to examining the running path of the launch file
   the relative path start with "../ros_ws/src..." also works fine -->
-  <arg name="robot_model_path" default="/home/yang/ros_ws/src/swarm_robot_ros_sim/swarm_robot_description/urdf/two_wheel_robot.urdf"/>
-  <!-- <arg name="robot_model_path" default="../ros_ws/src/swarm_robot_ros_sim/swarm_robot_description/urdf/two_wheel_robot.urdf"/> -->
-  <arg name="robot_quantity" default="10"/>
-  <arg name="half_range" default="1.0"/>
+  <!-- <arg name="robot_model_path" default="/home/yang/ros_ws/src/swarm_robot_ros_sim/swarm_robot_description/urdf/two_wheel_robot.urdf"/> -->
 
   <!-- we resume the logic in empty_world.launch, changing the name of the world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -33,17 +34,21 @@
   </include>
 
   <!-- parameter server -->
-  <param name="robot_model_name" type="str" value="$(arg robot_model_name)"/>
-  <param name="robot_quantity" type="int" value="$(arg robot_quantity)"/>
-  <param name="half_range" type="double" value="$(arg half_range)"/>
-  <param name="robot_model_path" type="str" value="$(arg robot_model_path)"/>
+  <!-- all parameters under swarm_sim namespace -->
+  <param name="/swarm_sim/robot_name" type="str" value="$(arg robot_name)"/>
+  <param name="/swarm_sim/robot_quantity" type="int" value="$(arg robot_quantity)"/>
+  <param name="/swarm_sim/half_range" type="double" value="$(arg half_range)"/>
+  <!-- <param name="robot_model_path" type="str" value="$(arg robot_model_path)"/> -->
+  <!-- load all the robot model files here, use the one on robot_name parameter for swarm robot simulation -->
+  <param name="/swarm_sim/two_wheel_robot_urdf" type="str" textfile="$(find swarm_robot_description)/urdf/two_wheel_robot.urdf"/>
 
   <!-- spawn the enclosure in gazebo -->
   <!-- <node name="enclosure" pkg="gazebo_ros" type="spawn_model" args="-file $(find swarm_robot_description)/urdf/enclosure_halfside_3.0.urdf -urdf -model enclosure_halfside_3.0"/> -->
 
   <!-- spawn multiple robot models in gazebo -->
   <!-- output= "screen" means all the ROS_INFO will show on the screen instead of a log, useful -->
-  <node name= "swarm_spawner_gazebo_client" pkg= "swarm_robot_description" type= "swarm_spawner_gazebo_client" output= "screen" />
+  <!-- <node name= "swarm_spawner_gazebo_client" pkg= "swarm_robot_description" type= "swarm_spawner_gazebo_client" output= "screen" /> -->
 
 
 </launch>
+
