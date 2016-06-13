@@ -2,8 +2,13 @@
 <launch>
 
   <!-- these are the arguments you can pass this launch file -->
+  <!-- gazebo environment -->
   <arg name="paused" default="false"/>
   <arg name="debug" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <!-- experimental setup of the robots -->
   <arg name="robot_model_name" default="two_wheel_robot"/>
   <!-- attention here!!!
   the running path when this launch file is launched is "/home/yang/.ros"
@@ -17,14 +22,14 @@
   <arg name="robot_quantity" default="10"/>
   <arg name="half_range" default="1.0"/>
 
-  <!-- we resume the logic in empty_world.launch -->
+  <!-- we resume the logic in empty_world.launch, changing the name of the world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find swarm_robot_description)/gazebo/empty.world"/>
-    <arg name="debug" value="$(arg debug)" />
-    <arg name="gui" value="true" />
+    <arg name="world_name" value="$(find swarm_robot_description)/worlds/empty.world"/>
     <arg name="paused" value="$(arg paused)"/>
-    <arg name="use_sim_time" value="true"/>
-    <arg name="headless" value="false"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="$(arg headless)"/>
   </include>
 
   <!-- parameter server -->
