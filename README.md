@@ -4,13 +4,13 @@ A swarm robot simulation environment for ROS Indigo to be used with Gazebo.
 ## What's inside
 *swarm_robot_ros_sim* contains packages each of which works on a set of functionalities of this simulation.
 
-"swarm_robot_description" package will describe the robot models, one simple model could be a two-wheel cubic robot, and also the gazebo environment setting files and launch files.
+"swarm_robot_description" package describes the robot models, like a simple two wheel robot, and also the gazebo environment setting files and launch files.
 
-"swarm_robot_msgs" folder will contain packages for customized messages, services and actions that will be used in other packages.
+"swarm_robot_msgs" folder contains packages for customized messages, services and actions that will be used in other packages.
 
-"swarm_robot_simulator" package will contain simulators for physical properties, including actuation, communication and sensing capabilities.
+"swarm_robot_controller" package contains the low level control of each swarm robot.
 
-"swarm_robot_controller" package will be the place in which different control algorithms reside.
+"swarm_robot_simulation" package is the place where different swarm algorithms reside.
 
 ## Motivation
 This project starts after investigating several swarm robot platforms like Kilobot, E-puck, Jasmine, Alice, etc, and work on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while, it would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. This project is also for the purpose of learning programming and various tools in ROS.
