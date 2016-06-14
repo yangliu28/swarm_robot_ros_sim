@@ -13,7 +13,7 @@ A swarm robot simulation environment for ROS Indigo to be used with Gazebo.
 "swarm_robot_controller" package will be the place in which different control algorithms reside.
 
 ## Motivation
-This project starts after investigating several swarm robot platforms like Kilobot, E-puck, Jasmine, Alice, etc, and work on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while, it would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. This project is also for the purpose of learning various tools and programming in ROS.
+This project starts after investigating several swarm robot platforms like Kilobot, E-puck, Jasmine, Alice, etc, and work on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while, it would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. This project is also for the purpose of learning programming and various tools in ROS.
 
 ## Setup
 Have ROS Indigo installed and workspace setup. Clone this package at ~/ros_ws/src and build using catkin_make.
@@ -23,7 +23,7 @@ In different terminals:
 
 launch the gazebo environment setting (parameter values are default):
 ```
-roslaunch swarm_robot_description initialize.launch robot_quantity:=10 half_range:=1.0
+roslaunch swarm_robot_description initialize.launch robot_name:=two_wheel_robot robot_quantity:=10 robot_range:=1.0
 ```
 launch the controllers for two wheel robot:
 ```

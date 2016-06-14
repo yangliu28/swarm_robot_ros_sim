@@ -1,10 +1,11 @@
 // spawn robot swarm at customized quantity, positions and orientation using gazebo service
 // this node is to be invoked in a launch file for environment setting of gazebo
 
-// all parameters are from parameter server
-    // robot model: /robot_model_path
+// parameters from parameter server
+    // robot name: /swarm_sim/robot_name
+    // robot urdf: /swarm_sim/robot_name_urdf (replace robot_name with the real name)
     // robot quantity: /robot_quantity
-    // robot distribution: /half_range
+    // robot distribution range: /half_range
 
 #include <ros/ros.h>
 #include <iostream>
