@@ -218,7 +218,7 @@
   <child link="left_wheel" />
   <origin xyz="0 0.0137 0.0127" rpy="-1.5708 0 0" />
   <axis xyz="0 0 -1" />
-<!--   important axis setting here, with the corresponding setting in right_motor
+<!--   important axis setting, with the corresponding setting in right_motor
   two wheels are tuned at the same direction, which means
   when the same wheel position command is given, both wheels will make the same effect
   of pushing the robot forward or backward -->
