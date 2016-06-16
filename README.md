@@ -19,8 +19,6 @@ This project starts after investigating several swarm robot platforms like Kilob
 Have ROS Indigo installed and workspace setup. Clone this package at ~/ros_ws/src and build with catkin_make.
 
 ## Demo tests
-In different terminals:
-
 launch the gazebo environment setting (parameter values are default):
 ```
 roslaunch swarm_robot_description initialize.launch robot_name:=two_wheel_robot robot_quantity:=10 robot_range:=1.0
