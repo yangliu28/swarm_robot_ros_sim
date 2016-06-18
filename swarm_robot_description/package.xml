@@ -45,7 +45,7 @@
   <run_depend>roscpp</run_depend>
 
   <!-- Eigen requires cmake_modules -->
-  <build_depend>cmake_modules</build_depend>
+  <!-- <build_depend>cmake_modules</build_depend> -->
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
@@ -55,4 +55,3 @@
     <!-- Other tools can request additional information be placed here -->
   </export>
 </package>
-    
