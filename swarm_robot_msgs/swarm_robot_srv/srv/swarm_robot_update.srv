@@ -1,0 +1,14 @@
+# service message to add or delete robot model in gazebo
+
+# request fields
+# sign indicates add or delete, absolute value means quantity
+int32 update
+---
+# response constants
+uint8 UPDATE_IS_ZERO = 0
+uint8 SUCCESS = 1
+uint8 ADD_FAIL = 2
+uint8 DELETE_FAIL = 3
+# response fields
+uint8 response_code
+

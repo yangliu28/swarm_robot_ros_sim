@@ -38,7 +38,10 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
 }
 
 // callback for service to change robot models in gazebo
-bool twoWheelRobotUpdateCallback(swarm_robot_srv::swarm_robot_update& )
+bool twoWheelRobotUpdateCallback(swarm_robot_srv::swarm_robot_updateRequest& request,
+    swarm_robot_srv::swarm_robot_updateResponse& response) {
+    
+}
 
 
 
@@ -63,7 +66,8 @@ int main(int argc, char **argv) {
         = nh.advertise<swarm_robot_msgs::two_wheel_robot>("/swarm_sim/two_wheel_robot", 1);
 
     // initialize a subscriber for "/gazebo/model_states"
-    ros::Subscriber model_states_subscriber = nh.subscribe("/gazebo/model_states", 1, modelStatesCallback);
+    ros::Subscriber model_states_subscriber
+        = nh.subscribe("/gazebo/model_states", 1, modelStatesCallback);
     // this topic publish at 1000hz rate
 
     // initialize a service client to get wheel velocities
@@ -79,11 +83,11 @@ int main(int argc, char **argv) {
 
 
 
+
+
+
+
 }
-
-
-
-
 
 
 
