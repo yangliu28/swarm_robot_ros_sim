@@ -1,13 +1,13 @@
 // this node manage the number and index of present two wheel robot
 
-// publish topic on two wheel robot information
-    // robot index, 2D position and speed of wheels
-// use gazebo service to spawn and delete model in gazebo
+// publish topic on two wheel robot information, including:
+    // robot index, 2D position, orientation and speed of two wheels
+// use gazebo service to add and delete model in gazebo
 // (compatible when a robot model is deleted directly from gazebo gui)
 // accept service request the command of adding or deleting robot model
 // (adding or deleting action will be reflected directly in the topic msg)
 
-// this node is not compatible with different robot models, for two wheel orbot only
+// this node is not compatible with different robot models, for two wheel robot only
 // because only two wheel robot has wheel speed, may write another node for other robot models
 
 // both low and high level robot control subscribe to same robot information topic
@@ -24,7 +24,7 @@
 
 #include <ros/ros.h>
 #include <swarm_robot_msgs/two_wheel_robot.h>
-#include <swarm_robot_srv/swarm_robot_update.h>
+#include <swarm_robot_srv/two_wheel_robot_update.h>
 #include <gazebo_msgs/SpawnModel.h>
 #include <gazebo_msgs/DeleteModel.h>
 #include <gazebo_msgs/ModelStates.h>
@@ -34,6 +34,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <cmath>
+#include <stdlib.h>  // rand()
 
 // global variables
 // THE container maintained by this node
@@ -67,7 +69,7 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
                     // update the 2D position of two wheel robots
                     current_robots.x[j] = current_model_states.pose[i].position.x;
                     current_robots.y[j] = current_model_states.pose[i].position.y;
-                    current_robot.orientation[j]
+                    current_robots.orientation[j]
                         = quaternion_to_angle(current_model_states.pose[i].orientation);
                     container_index.erase(j);
                     parsed_index_found = true;
@@ -111,16 +113,62 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
         }
     }
 
-    // reset robot_position_updated flag
+    // reset robot position updated flag
     robot_position_updated = true;
 }
 
 // callback for service to change robot models in gazebo
-bool twoWheelRobotUpdateCallback(swarm_robot_srv::swarm_robot_updateRequest& request
-    , swarm_robot_srv::swarm_robot_updateResponse& response
+bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest& request
+    , swarm_robot_srv::two_wheel_robot_updateResponse& response
     , ros::ServiceClient add_model_client
     , ros::ServiceClient delete_model_client) {
+    ROS_INFO_STREAM("in the two wheel robot update callback");
+    // add or delete models in gazebo here
+    if (request.update_code < swarm_robot_srv::two_wheel_robot_updateRequest::DELETE_ALL) {
+        // update code is a negative number, meaning delete a number of robots
+        std::vector<int32_t> container_index = current_robots.index;
+        int delete_robot_quantity = std::abs(request.update_code);
+        int current_robot_quantity = container_index.size();
+        if (delete_robot_quantity > current_robot_quantity) {
+            ROS_ERROR("requested deletion quantity exceeds existed robots");
+            response.response_code
+                = swarm_robot_srv::two_wheel_robot_updateResponse::DELETE_FAIL_EXCEED_QUANTITY;
+            return false;
+        }
+        else {
+            // start randomly choose robot to delete
+            gazebo_msgs::DeleteModel delete_model_srv_msg;
+            for (int i=0; i<delete_robot_quantity; i++) {
+                // repeat random deletion for "delete_robot_quantity" times
+                // index of the vector "container_index"
+                int container_index_index = rand() % container_index.size();
+                int delete_index = container_index[container_index_index];
+                container_index.erase(container_index_index);  // avoid deletion on same robot
+                delete_model_srv_msg.model_name = "two_wheel_robot_" + intToString(delete_index);
+                bool call_service = delete_model_client.call(delete_model_srv_msg);
+                if (call_service) {
+                    if (delete_model_srv_msg.response.success) {
+                        ROS_INFO_STREAM("two_wheel_robot_" << intToString(delete_index)
+                            << " has been deleted");
+                    }
+                    else {
+                        ROS_INFO_STREAM("two_wheel_robot_" << intToString(delete_index)
+                            << " deletion failed");
+                    }
+                }
+                else {
+                    ROS_ERROR("fail to connect with gazebo server");
+                    response.response_code
+                        = swarm_robot_srv::two_wheel_robot_updateResponse::DELETE_FAIL_NO_RESPONSE;
+                    return false;
+                }
+            }
+        }
+    }
+    else if (request.update_code == swarm_robot_srv::two_wheel_robot_updateRequest::DELETE_ALL) {
+        // delete all robots sequentially, no need to randomly choose
 
+    }
 }
 
 // quaternion => rotation angle of two wheel robot
@@ -204,7 +252,6 @@ int main(int argc, char **argv) {
     // instantiate a service client for "/gazebo/delete_model"
     ros::ServiceClient delete_model_client
         = nh.serviceClient<gazebo_msgs::DeleteModel>("/gazebo/delete_model");
-    gazebo_msgs::DeleteModel delete_model_srv_msg;  // service message
 
 
 
