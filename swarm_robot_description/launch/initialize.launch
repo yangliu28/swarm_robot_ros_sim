@@ -10,8 +10,6 @@
   <arg name="headless" default="false"/>
   <!-- experimental setup of the robots -->
   <arg name="robot_name" default="two_wheel_robot"/>
-  <arg name="robot_quantity" default="10"/>
-  <arg name="robot_range" default="1.0"/>
 
   <!-- obsoleted -->
   <!-- notes for robot model file path:
@@ -35,13 +33,11 @@
 
   <!-- parameter server -->
   <!-- all parameters under swarm_sim namespace -->
+  <!-- robot_name decide which robot is used in the simulation -->
   <param name="/swarm_sim/robot_name" type="str" value="$(arg robot_name)"/>
-  <param name="/swarm_sim/robot_quantity" type="int" value="$(arg robot_quantity)"/>
-  <param name="/swarm_sim/robot_range" type="double" value="$(arg robot_range)"/>
   <!-- <param name="robot_model_path" type="str" value="$(arg robot_model_path)"/> -->
   <!-- list all the robot model files here, use the one on robot_name parameter for swarm robot simulation -->
   <param name="/swarm_sim/two_wheel_robot_urdf" type="str" textfile="$(find swarm_robot_description)/urdf/two_wheel_robot.urdf"/>
-
   <!-- spawn the enclosure in gazebo -->
   <!-- <node name="enclosure" pkg="gazebo_ros" type="spawn_model" args="-file $(find swarm_robot_description)/urdf/enclosure_halfside_3.0.urdf -urdf -model enclosure_halfside_3.0"/> -->
 
