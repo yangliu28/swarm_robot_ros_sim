@@ -29,8 +29,11 @@
 #include <gazebo_msgs/DeleteModel.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <gazebo_msgs/GetJointProperties.h>
+#include <geometry_msgs/Quaternion.h>
+#include <gaometry_msgs/Pose.h>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 // global variables
 // THE container maintained by this node
@@ -40,14 +43,11 @@ bool robot_position_updated = false;
 // callback for getting robot positions
 // also check and update if there is any addition or deletion of robots
 void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
-    // parsing the two wheel robots from all the robot models
-    // possible that there is models for obstacles or other environments
+    // parsing the two wheel robots from all the models in gazebo
+    // possible that there are models for obstacles or other environments
     int model_quantity = current_model_states.name.size();
     // the index of robots in the container
     std::vector<int32_t> container_index = current_robots.index;
-    // the index of robots found in gazebo
-    std::vector<int32_t> gazebo_index;
-    gazebo_index.clear();
     for (int i=0; i<model_quantity; i++) {
         // check if it is a two wheel robot
         // there is a underscore between the name and the index
@@ -57,15 +57,59 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
             // get the robot index
             // 16 = 15 + 1, 15 is the length of "two_wheel_robot"
             std::string index_str = current_model_states.name[i].substr(16);
-            int index_found = std::atoi(index_str.c_str());
+            int index_parsed = std::atoi(index_str.c_str());
             // search in the container
             int container_size = container_index.size();
+            bool parsed_index_found = false;
             for (int j=0; j<container_size; j++) {
-                if (index_found == container_index[j])
+                // the size of container_index may change for each i
+                if (index_parsed == container_index[j]) {
+                    // update the 2D position of two wheel robots
+                    current_robots.x[j] = current_model_states.pose[i].position.x;
+                    current_robots.y[j] = current_model_states.pose[i].position.y;
+                    current_robot.orientation[j]
+                        = quaternion_to_angle(current_model_states.pose[i].orientation);
+                    container_index.erase(j);
+                    parsed_index_found = true;
+                    break;
+                }
+            }
+            if (!parsed_index_found) {
+                // parsed index not found in the container, ADDITION found!
+                // update a new robot in the container
+                current_robots.index.push_back(index_parsed);
+                current_robots.x.push_back(current_model_states.pose[i].position.x);
+                current_robots.y.push_back(current_model_states.pose[i].position.y);
+                current_robots.orientation.push_back(quaternion_to_angle(current_model_states.pose[i].orientation));
+                current_robots.left_wheel_vel.push_back(0);
+                current_robots.right_wheel_vel.push_back(0);
+                ROS_INFO_STREAM("robot addition detected: two_wheel_robot_" << index_str);
             }
         }
     }
 
+    // update the container if there is deletion in gazebo
+    if (container_index.size() != 0) {
+        int container_index_size = container_index.size();
+        for (int i=0; i<container_index_size; i++) {
+            int current_robots_index_size = current_robots.index.size();
+            for (int j=0; j<current_robots_index_size; j++) {
+                // the index should be found before this loop ends
+                if (container_index[i] == current_robots.index[j]) {
+                    // erase the node
+                    current_robots.index.erase(j);
+                    current_robots.x.erase(j);
+                    current_robots.y.erase(j);
+                    current_robots.orientation.erase(j);
+                    current_robots.left_wheel_vel.erase(j);
+                    current_robots.right_wheel_vel.erase(j);
+                    ROS_INFO_STREAM("robot deletion detected: two_wheel_robot_"
+                        << intToString(container_index[i]));
+                    break;
+                }
+            }
+        }
+    }
 
     // reset robot_position_updated flag
     robot_position_updated = true;
@@ -79,7 +123,18 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::swarm_robot_updateRequest& req
 
 }
 
+// quaternion => rotation angle
+double quaternion_to_angle(geometry_msgs::Quaternion input_quaternion) {
+    // this assume the x and y element of the quaternion is close to zero
+    return atan(input_quaternion.z/input_quaternion.w) * 2
+}
 
+// int to string converter
+std::string intToString(int a) {
+    std::stringstream ss;
+    ss << a;
+    return ss.str();
+}
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "/swarm_sim/two_wheel_robot_manager");
