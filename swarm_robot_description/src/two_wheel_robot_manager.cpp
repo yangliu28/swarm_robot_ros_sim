@@ -123,7 +123,7 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::swarm_robot_updateRequest& req
 
 }
 
-// quaternion => rotation angle
+// quaternion => rotation angle of two wheel robot
 double quaternion_to_angle(geometry_msgs::Quaternion input_quaternion) {
     // this assume the x and y element of the quaternion is close to zero
     return atan(input_quaternion.z/input_quaternion.w) * 2
@@ -208,6 +208,8 @@ int main(int argc, char **argv) {
 
 
 
+
+    // publish loop
 
 
 

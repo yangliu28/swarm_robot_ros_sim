@@ -1,22 +1,30 @@
 # service message to add or delete robot model in gazebo
 
-# ADD will add a number of robots at random position in defined range
-# DELETE will randomly delete a number of robots
+# add a number of robots at random position in defined range
+# add one robot at specific position
+# randomly delete a number of robots
+# delete all robots presented
 
 
 # request fields
 # sign indicates add or delete, absolute value means quantity
 # 0 represents delete all
 int32 update
-# the distribution when adding robots
+# the distribution when adding a number of robots
 float64 half_range
+# the position when adding one robot
+float64 x
+float64 y
 ---
 # response constants
 uint8 SUCCESS = 1
 uint8 ADD_FAIL_NO_RESPONSE = 2
-uint8 ADD_FAIL_TOO_CROWD = 3
-uint8 DELETE_FAIL_NO_RESPONSE = 4
-uint8 DELETE_FAIL_EXCEED_QUANTITY = 5
+uint8 ADD_FAIL_TOO_CROWDED = 3
+    # too crowded when adding a number of robots
+uint8 ADD_FAIL_OCUPIED = 4
+    # position ocupied when adding one robot
+uint8 DELETE_FAIL_NO_RESPONSE = 5
+uint8 DELETE_FAIL_EXCEED_QUANTITY = 6
 # response fields
 uint8 response_code
 
