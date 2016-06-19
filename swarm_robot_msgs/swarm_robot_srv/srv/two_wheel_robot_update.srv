@@ -1,31 +1,33 @@
 # service message to add or delete two wheel robot model in gazebo
 
 # the functions:
-# add a number of robots at random position in defined range
-# add one robot at specific position
+# add a robot at random position in defined range, or specified position
 # randomly delete a number of robots
 # delete all robots presented
 
 
 # request constants
-int32 DELETE_ALL = 0
-int32 ADD_ONE = 1
+int32 CODE_DELETE = -1
+int32 CODE_DELETE_ALL = 0
+int32 CODE_ADD = 1
+bool ADD_MODE_RANDOM = false
+bool ADD_MODE_SPECIFIED = true
 # request fields
 # sign indicates add or delete, absolute value means quantity
 # 0 represents delete all
 int32 update_code
-# the distribution when adding a number of robots
+bool add_mode
+# the distribution when randomly adding a robot
 float64 half_range
-# the position when adding one robot
-float64 x
-float64 y
+# the position when specifically adding a robot
+float64[] position_2d
 ---
 # response constants
 uint8 SUCCESS = 1
 uint8 ADD_FAIL_NO_RESPONSE = 2
 uint8 ADD_FAIL_TOO_CROWDED = 3
     # too crowded when adding a number of robots
-uint8 ADD_FAIL_OCUPIED = 4
+uint8 ADD_FAIL_OCCUPIED = 4
     # position ocupied when adding one robot
 uint8 DELETE_FAIL_NO_RESPONSE = 5
 uint8 DELETE_FAIL_EXCEED_QUANTITY = 6

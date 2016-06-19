@@ -3,22 +3,17 @@
 // publish topic on two wheel robot information, including:
     // robot index, 2D position, orientation and speed of two wheels
 // use gazebo service to add and delete model in gazebo
-// (compatible when a robot model is deleted directly from gazebo gui)
-// accept service request the command of adding or deleting robot model
-// (adding or deleting action will be reflected directly in the topic msg)
-
-// this node is not compatible with different robot models, for two wheel robot only
-// because only two wheel robot has wheel speed, may write another node for other robot models
+    // accept service request of adding or deleting and quantity
+    // compatible when a robot model is deleted directly from gazebo gui
+    // can delete a number of robots, delete all robots, but one robot a time when adding
+    // because the service callback function will check collision when adding a robot
+    // if adding multiple robots in one service call, after the first robot is added
+    // its position is unknown and needs model states callback funtion to update it
+    // so one robot a time when adding, either random or specific position
 
 // both low and high level robot control subscribe to same robot information topic
 // although it's better to divide the message into two, and publish at different frequency
 // this one topic method can be reused when it comes to other robot models
-
-
-
-
-// check collision when adding robots
-
 
 
 
@@ -36,6 +31,8 @@
 #include <algorithm>
 #include <cmath>
 #include <stdlib.h>  // rand()
+
+const double SAFE_DIST = 46.5;  // the collision free distance between two robots
 
 // global variables
 // THE container maintained by this node
@@ -89,7 +86,6 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
             }
         }
     }
-
     // update the container if there is deletion in gazebo
     if (container_index.size() != 0) {
         int container_index_size = container_index.size();
@@ -112,7 +108,6 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
             }
         }
     }
-
     // reset robot position updated flag
     robot_position_updated = true;
 }
@@ -121,10 +116,11 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
 bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest& request
     , swarm_robot_srv::two_wheel_robot_updateResponse& response
     , ros::ServiceClient add_model_client
-    , ros::ServiceClient delete_model_client) {
+    , ros::ServiceClient delete_model_client
+    , std::string two_wheel_robot_urdf) {
     ROS_INFO_STREAM("in the two wheel robot update callback");
-    // add or delete models in gazebo here
-    if (request.update_code < swarm_robot_srv::two_wheel_robot_updateRequest::DELETE_ALL) {
+    // add or delete models in gazebo
+    if (request.update_code <= swarm_robot_srv::two_wheel_robot_updateRequest::CODE_DELETE) {
         // update code is a negative number, meaning delete a number of robots
         std::vector<int32_t> container_index = current_robots.index;
         int delete_robot_quantity = std::abs(request.update_code);
@@ -165,10 +161,96 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
             }
         }
     }
-    else if (request.update_code == swarm_robot_srv::two_wheel_robot_updateRequest::DELETE_ALL) {
+    else if (request.update_code == swarm_robot_srv::two_wheel_robot_updateRequest::CODE_DELETE_ALL) {
         // delete all robots sequentially, no need to randomly choose
-
+        gazebo_msgs::DeleteModel delete_model_srv_msg;
+        std::vector<int32_t> container_index = current_robots.index;
+        int delete_robot_quantity = container_index.size();
+        for (int i=0; i<delete_robot_quantity; i++) {
+            int delete_index = container_index[i];
+            delete_model_srv_msg.model_name = "two_wheel_robot_" + intToString(delete_index);
+            bool call_service = delete_model_client.call(delete_model_srv_msg);
+            if (call_service) {
+                if (delete_model_srv_msg.response.success) {
+                    ROS_INFO_STREAM("two_wheel_robot_" << intToString(delete_index)
+                        << " has been deleted");
+                }
+                else {
+                    ROS_INFO_STREAM("two_wheel_robot_" << intToString(delete_index)
+                        << " deletion failed");
+                }
+            }
+            else {
+                ROS_ERROR("fail to connect with gazebo server");
+                response.response_code
+                    = swarm_robot_srv::two_wheel_robot_updateResponse::DELETE_FAIL_NO_RESPONSE;
+                return false;
+            }
+        }
     }
+    else if (request.update_code >= swarm_robot_srv::two_wheel_robot_updateRequest::CODE_ADD) {
+        // add one robot either at specified position or random position in range
+        gazebo_msgs::SpawnModel add_model_srv_msg;
+        geometry_msgs::Pose model_pose;
+        std::vector<double> new_position;
+        new_position.resize(2);
+        // decide where the position comes from and check its effectiveness
+        if (request.add_mode == swarm_robot_srv::two_wheel_robot_updateRequest::ADD_MODE_RANDOM) {
+            // add a robot at random position in range defined
+            new_position = random_position(request.half_range);
+            int position_generating_count = 1;  // already generate once
+            while (!position_availibility(new_position) && position_generating_count < 100) {
+                // generate new position until there is no collision
+                new_position = random_position(request.half_range);
+                position_generating_count = position_generating_count + 1;
+            }
+            if (position_generating_count == 100) {
+                // position generated is still not availabe after 100 trials
+                ROS_ERROR("add robot at random fail because range is too crowded");
+                response.response_code
+                    = swarm_robot_srv::two_wheel_robot_updateResponse::ADD_FAIL_TOO_CROWDED;
+                return false;
+            }
+            // if here, position randomly generated is ok to be used
+        }
+        else if (request.add_mode == swarm_robot_srv::two_wheel_robot_updateRequest::ADD_MODE_SPECIFIED) {
+            // add a robot at specified position
+            new_position = request.position_2d;
+            if (!position_availibility(new_position)) {
+                // passed in position is occupied
+                ROS_ERROR("add robot at specified position fail because it is occupied");
+                response.response_code
+                    = swarm_robot_srv::two_wheel_robot_updateResponse::ADD_FAIL_OCCUPIED;
+                return false;
+            }
+            // if here, position passed in is ok to be used
+        }
+        // add the robot using position either from random generated or specified
+        // added robot will always queue after the last robot
+        std::string new_model_name = "two_wheel_robot_" + intToString(current_robots.index.back() + 1);
+        add_model_srv_msg.request.model_name = new_model_name;
+        add_model_srv_msg.request.model_xml = two_wheel_robot_urdf;
+        add_model_srv_msg.request.robot_namespace = new_model_name;
+        add_model_srv_msg.request.initial_pose.position.x = new_position[0];
+        add_model_srv_msg.request.initial_pose.position.y = new_position[1];
+        add_model_srv_msg.request.initial_pose.position.z = 0.0;
+        bool call_service = add_model_client.call(add_model_srv_msg);
+        if (call_service) {
+            if (add_model_srv_msg.response.success) {
+                ROS_INFO_STREAM(new_model_name << " has been spawned");
+            }
+            else {
+                ROS_INFO_STREAM(new_model_name << " fail to be spawned");
+            }
+        }
+        else {
+            ROS_ERROR("fail to connect with gazebo server");
+            response.response_code
+                = swarm_robot_srv::two_wheel_robot_updateResponse::ADD_FAIL_NO_RESPONSE;
+            return false;
+        }
+    }
+    return true;
 }
 
 // quaternion => rotation angle of two wheel robot
@@ -183,6 +265,30 @@ std::string intToString(int a) {
     ss << a;
     return ss.str();
 }
+
+// generate a pair of random float numbers with in half_range
+std::vector<double> random_position(double half_range) {
+    std::vector<double> position_2d;
+    position_2d.resize(2);  // contains 2 numbers
+    // generate the pseudorandom float number between [-half_range, half_range]
+    position_2d[0] = (((double)rand())/(double)RAND_MAX - 0.5)*half_range;
+    position_2d[1] = (((double)rand())/(double)RAND_MAX - 0.5)*half_range;
+    return position_2d;
+}
+
+// position check for availbility, avoid collision when adding new robot model in gazebo
+bool position_availibility(std::vector<double> position_2d) {
+    // return true if input position is ok to add a robot
+    int current_robot_quantity = current_robots.index.size();
+    for (int i=0; i<current_robot_quantity; i++) {
+        double dist = sqrt(pow(position_2d[0] - current_robots.x[i], 2),
+            pow(position_2d[1] - current_robots.y[i], 2));
+        if (dist < SAFE_DIST) return false;
+    }
+    // if here, the position is safe
+    return true;
+}
+
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "/swarm_sim/two_wheel_robot_manager");
@@ -246,9 +352,6 @@ int main(int argc, char **argv) {
     // instantiate a service client for "/gazebo/spawn_urdf_model"
     ros::ServiceClient add_model_client
         = nh.serviceClient<gazebo_msgs::SpawnModel>("/gazebo/spawn_urdf_model");
-    gazebo_msgs::SpawnModel add_model_srv_msg;  // service message
-    geometry_msgs::Pose model_pose;  // pose message for service message
-
     // instantiate a service client for "/gazebo/delete_model"
     ros::ServiceClient delete_model_client
         = nh.serviceClient<gazebo_msgs::DeleteModel>("/gazebo/delete_model");
@@ -257,6 +360,8 @@ int main(int argc, char **argv) {
 
 
     // publish loop
+
+
 
 
 
