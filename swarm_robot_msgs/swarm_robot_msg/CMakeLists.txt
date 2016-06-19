@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(swarm_robot_msgs)
+project(swarm_robot_msg)
 
 find_package(catkin_simple REQUIRED)
 

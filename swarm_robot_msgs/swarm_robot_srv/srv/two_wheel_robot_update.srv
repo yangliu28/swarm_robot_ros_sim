@@ -10,8 +10,8 @@
 int32 CODE_DELETE = -1
 int32 CODE_DELETE_ALL = 0
 int32 CODE_ADD = 1
-bool ADD_MODE_RANDOM = false
-bool ADD_MODE_SPECIFIED = true
+bool ADD_MODE_RANDOM = False
+bool ADD_MODE_SPECIFIED = True
 # request fields
 # sign indicates add or delete, absolute value means quantity
 # 0 represents delete all

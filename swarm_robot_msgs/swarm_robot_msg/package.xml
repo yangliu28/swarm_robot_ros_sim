@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>swarm_robot_msgs</name>
+  <name>swarm_robot_msg</name>
   <version>0.0.0</version>
-  <description>The swarm_robot_msgs package</description>
+  <description>The swarm_robot_msg package</description>
   
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

@@ -16,16 +16,14 @@
 // this one topic method can be reused when it comes to other robot models
 
 
-
 #include <ros/ros.h>
-#include <swarm_robot_msgs/two_wheel_robot.h>
+#include <swarm_robot_msg/two_wheel_robot.h>
 #include <swarm_robot_srv/two_wheel_robot_update.h>
 #include <gazebo_msgs/SpawnModel.h>
 #include <gazebo_msgs/DeleteModel.h>
 #include <gazebo_msgs/ModelStates.h>
 #include <gazebo_msgs/GetJointProperties.h>
 #include <geometry_msgs/Quaternion.h>
-#include <gaometry_msgs/Pose.h>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -36,8 +34,45 @@ const double SAFE_DIST = 46.5;  // the collision free distance between two robot
 
 // global variables
 // THE container maintained by this node
-swarm_robot_msgs::two_wheel_robot current_robots;
+swarm_robot_msg::two_wheel_robot current_robots;
 bool robot_position_updated = false;
+
+
+// quaternion => rotation angle of two wheel robot
+double quaternion_to_angle(geometry_msgs::Quaternion input_quaternion) {
+    // this assume the x and y element of the quaternion is close to zero
+    return atan(input_quaternion.z/input_quaternion.w) * 2;
+}
+
+// int to string converter
+std::string intToString(int a) {
+    std::stringstream ss;
+    ss << a;
+    return ss.str();
+}
+
+// generate a pair of random float numbers with in half_range
+std::vector<double> random_position(double half_range) {
+    std::vector<double> position_2d;
+    position_2d.resize(2);  // contains 2 numbers
+    // generate the pseudorandom float number between [-half_range, half_range]
+    position_2d[0] = (((double)rand())/(double)RAND_MAX - 0.5)*half_range;
+    position_2d[1] = (((double)rand())/(double)RAND_MAX - 0.5)*half_range;
+    return position_2d;
+}
+
+// position check for availbility, avoid collision when adding new robot model in gazebo
+bool position_availibility(std::vector<double> position_2d) {
+    // return true if input position is ok to add a robot
+    int current_robot_quantity = current_robots.index.size();
+    for (int i=0; i<current_robot_quantity; i++) {
+        double dist = sqrt(pow(position_2d[0] - current_robots.x[i], 2),
+            pow(position_2d[1] - current_robots.y[i], 2));
+        if (dist < SAFE_DIST) return false;
+    }
+    // if here, the position is safe
+    return true;
+}
 
 // callback for getting robot positions
 // also check and update if there is any addition or deletion of robots
@@ -113,6 +148,7 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
 }
 
 // callback for service to change robot models in gazebo
+// the return value of this function also shows whether the operation is successful
 bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest& request
     , swarm_robot_srv::two_wheel_robot_updateResponse& response
     , ros::ServiceClient add_model_client
@@ -191,7 +227,6 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
     else if (request.update_code >= swarm_robot_srv::two_wheel_robot_updateRequest::CODE_ADD) {
         // add one robot either at specified position or random position in range
         gazebo_msgs::SpawnModel add_model_srv_msg;
-        geometry_msgs::Pose model_pose;
         std::vector<double> new_position;
         new_position.resize(2);
         // decide where the position comes from and check its effectiveness
@@ -253,42 +288,6 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
     return true;
 }
 
-// quaternion => rotation angle of two wheel robot
-double quaternion_to_angle(geometry_msgs::Quaternion input_quaternion) {
-    // this assume the x and y element of the quaternion is close to zero
-    return atan(input_quaternion.z/input_quaternion.w) * 2
-}
-
-// int to string converter
-std::string intToString(int a) {
-    std::stringstream ss;
-    ss << a;
-    return ss.str();
-}
-
-// generate a pair of random float numbers with in half_range
-std::vector<double> random_position(double half_range) {
-    std::vector<double> position_2d;
-    position_2d.resize(2);  // contains 2 numbers
-    // generate the pseudorandom float number between [-half_range, half_range]
-    position_2d[0] = (((double)rand())/(double)RAND_MAX - 0.5)*half_range;
-    position_2d[1] = (((double)rand())/(double)RAND_MAX - 0.5)*half_range;
-    return position_2d;
-}
-
-// position check for availbility, avoid collision when adding new robot model in gazebo
-bool position_availibility(std::vector<double> position_2d) {
-    // return true if input position is ok to add a robot
-    int current_robot_quantity = current_robots.index.size();
-    for (int i=0; i<current_robot_quantity; i++) {
-        double dist = sqrt(pow(position_2d[0] - current_robots.x[i], 2),
-            pow(position_2d[1] - current_robots.y[i], 2));
-        if (dist < SAFE_DIST) return false;
-    }
-    // if here, the position is safe
-    return true;
-}
-
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "/swarm_sim/two_wheel_robot_manager");
@@ -322,17 +321,9 @@ int main(int argc, char **argv) {
         }
     }
 
-    // initialize THE container
-    current_robots.index.clear();
-    current_robots.x.clear();
-    current_robots.y.clear();
-    current_robots.orientation.clear();
-    current_robots.left_wheel_vel.clear();
-    current_robots.right_wheel_vel.clear();
-
-    // instantiate a publisher for the managed information of two wheel robot
+    // instantiate a publisher for the maintained information of two wheel robot
     ros::Publisher two_wheel_robot_publisher
-        = nh.advertise<swarm_robot_msgs::two_wheel_robot>("/swarm_sim/two_wheel_robot", 1);
+        = nh.advertise<swarm_robot_msg::two_wheel_robot>("/swarm_sim/two_wheel_robot", 1);
 
     // instantiate a subscriber for "/gazebo/model_states"
     ros::Subscriber model_states_subscriber
@@ -344,11 +335,6 @@ int main(int argc, char **argv) {
         "/gazebo/get_joint_properties");
     gazebo_msgs::GetJointProperties joint_properties_srv_msg;
 
-    // instantiate a service server to modify the robots in gazebo
-    // add or delete robot models in gazebo
-    ros::ServiceServer two_wheel_robot_service
-        = nh.advertiseService("/swarm_sim/two_wheel_robot_update", twoWheelRobotUpdateCallback);
-
     // instantiate a service client for "/gazebo/spawn_urdf_model"
     ros::ServiceClient add_model_client
         = nh.serviceClient<gazebo_msgs::SpawnModel>("/gazebo/spawn_urdf_model");
@@ -356,20 +342,69 @@ int main(int argc, char **argv) {
     ros::ServiceClient delete_model_client
         = nh.serviceClient<gazebo_msgs::DeleteModel>("/gazebo/delete_model");
 
-
-
+    // instantiate a service server to modify the robots in gazebo
+    // add or delete robot models in gazebo
+    ros::ServiceServer two_wheel_robot_service
+        = nh.advertiseService<swarm_robot_srv::two_wheel_robot_update::Request
+        , swarm_robot_srv::two_wheel_robot_update::Response>("/swarm_sim/two_wheel_robot_update"
+        , boost::bind(twoWheelRobotUpdateCallback, _1, _2, add_model_client
+        , delete_model_client, two_wheel_robot_urdf));
 
     // publish loop
+    while (ros::ok()) {
+        // get the wheel speed for the maintained robots
+        int current_robot_quantity = current_robots.index.size();
+        if (robot_position_updated) {
+            // only update wheel velocities when positions have been update by model states callback
+            for (int i=0; i<current_robot_quantity; i++) {
+                // get left wheel velocity
+                joint_properties_srv_msg.joint_name
+                    = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::left_motor";
+                bool call_service = joint_properties_client.call(joint_properties_srv_msg);
+                // if call service not successful, it will leave the joint velocity unchanged
+                if (call_service) {
+                    if (!joint_properties_srv_msg.response.success) {
+                        // joint not found, there is possible robot deletion the container doesn't realize
+                        ROS_ERROR("there is possible robot deletion not updated");
+                    }
+                    else {
+                        // update the left wheel velocity
+                        current_robots.left_wheel_vel[i] = joint_properties_srv_msg.response.rate[0];
+                    }
+                }
+                else {
+                    ROS_ERROR("fail to connect with gazebo server");
+                    // do not return here
+                }
+                // get right wheel velocity
+                joint_properties_srv_msg.joint_name
+                    = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::right_motor";
+                bool call_service = joint_properties_client.call(joint_properties_srv_msg);
+                // if call service not successful, it will leave the joint velocity unchanged
+                if (call_service) {
+                    if (!joint_properties_srv_msg.response.success) {
+                        // joint not found, there is possible robot deletion the container doesn't realize
+                        ROS_ERROR("there is possible robot deletion not updated");
+                    }
+                    else {
+                        // update the right wheel velocity
+                        current_robots.right_wheel_vel[i] = joint_properties_srv_msg.response.rate[0];
+                    }
+                }
+                else {
+                    ROS_ERROR("fail to connect with gazebo server");
+                }
+            }
+            // publish the two wheel robot information container
+            two_wheel_robot_publisher.publish(current_robots);
+            // reset the position update flag
+            robot_position_updated = false;
+        }
+        // update global variables
+        ros::spinOnce();
+    }
 
-
-
-
+    return 0;
 
 }
-
-
-
-
-
-
 
