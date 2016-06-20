@@ -32,6 +32,7 @@ uint8 ADD_FAIL_OCCUPIED = 4
     # position ocupied when adding one robot
 uint8 DELETE_FAIL_NO_RESPONSE = 5
 uint8 DELETE_FAIL_EXCEED_QUANTITY = 6
+uint8 FAIL_OTHER_REASONS = 7
 # response fields
 uint8 response_code
 

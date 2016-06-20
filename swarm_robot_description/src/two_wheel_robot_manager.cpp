@@ -157,7 +157,9 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
     , ros::ServiceClient add_model_client
     , ros::ServiceClient delete_model_client
     , std::string two_wheel_robot_urdf) {
-    ROS_INFO_STREAM("in the two wheel robot update callback");
+    ROS_INFO("in the two wheel robot update callback");
+    // pre-set the response code to success, it changes to false when at least one false detected
+    response.response_code = swarm_robot_srv::two_wheel_robot_updateResponse::SUCCESS;
     // add or delete models in gazebo
     if (request.update_code <= swarm_robot_srv::two_wheel_robot_updateRequest::CODE_DELETE) {
         // update code is a negative number, meaning delete a number of robots
@@ -190,6 +192,9 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
                     else {
                         ROS_INFO_STREAM("two_wheel_robot_" << intToString(delete_index)
                             << " deletion failed");
+                        // this error is categorized to others
+                        response.response_code
+                            = swarm_robot_srv::two_wheel_robot_updateResponse::FAIL_OTHER_REASONS;
                     }
                 }
                 else {
@@ -199,6 +204,8 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
                     return true;
                 }
             }
+            // if here, the operation is either successful or fail for other reasons
+            return true;
         }
     }
     else if (request.update_code == swarm_robot_srv::two_wheel_robot_updateRequest::CODE_DELETE_ALL) {
@@ -218,6 +225,8 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
                 else {
                     ROS_INFO_STREAM("two_wheel_robot_" << intToString(delete_index)
                         << " deletion failed");
+                    response.response_code
+                        = swarm_robot_srv::two_wheel_robot_updateResponse::FAIL_OTHER_REASONS;
                 }
             }
             else {
@@ -227,6 +236,8 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
                 return true;
             }
         }
+        // if here, the operation is either successful or fail for other reasons
+        return true;
     }
     else if (request.update_code >= swarm_robot_srv::two_wheel_robot_updateRequest::CODE_ADD) {
         // add one robot either at specified position or random position in range
@@ -287,6 +298,8 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
             }
             else {
                 ROS_INFO_STREAM(new_model_name << " fail to be spawned");
+            response.response_code
+                = swarm_robot_srv::two_wheel_robot_updateResponse::FAIL_OTHER_REASONS;                
             }
         }
         else {
@@ -295,13 +308,14 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
                 = swarm_robot_srv::two_wheel_robot_updateResponse::ADD_FAIL_NO_RESPONSE;
             return true;
         }
+        // if here, the operation is either successful or fail for other reasons
+        return true;
     }
-    return true;
 }
 
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "/swarm_sim/two_wheel_robot_manager");
+    ros::init(argc, argv, "two_wheel_robot_manager");
     ros::NodeHandle nh;
 
     // handshake with robot name in parameter server, and get model urdf
@@ -331,6 +345,7 @@ int main(int argc, char **argv) {
             gazebo_ready = ros::service::exists("/gazebo/set_physics_properties", true);
         }
     }
+    ROS_INFO("gazebo is ready");
 
     // instantiate a publisher for the maintained information of two wheel robot
     ros::Publisher two_wheel_robot_publisher
