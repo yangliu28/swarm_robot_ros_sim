@@ -7,13 +7,15 @@ consider multiple nodes and remap, only need to write one node
 
 load command lines in terminal so that a robot can be easily added or deleted
 
-
-
-
-
-
+simulation result comparison with collision and without collision
 
 least amount of computation to do everything
+
+
+
+
+
+
 
 a light weight program to detect potential collision, arrange the priority of robots when collision is going to happen
 
@@ -28,17 +30,14 @@ wheels can always rotate at constant speed or the robot move in a zigzag way
 
 
 
-one node to manage the number and index of the robots through service, adding and deleting robot, publish robot position and wheel velocity of all current robots
+
 
 a controller node subscribe to robot information, and apply torque to control the wheel speed, subscribe to wheel speed command node
 
+the controller node is also compatible with adding or deleting operation
 
 
 
-setup initial position without collision
 
-
-
-simulation result comparison with collision and without collision
 
 
