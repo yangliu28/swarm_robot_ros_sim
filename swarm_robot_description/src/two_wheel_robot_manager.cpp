@@ -45,6 +45,18 @@ double quaternion_to_angle(geometry_msgs::Quaternion input_quaternion) {
     return atan(input_quaternion.z/input_quaternion.w) * 2;
 }
 
+// generate a quaternion for the random heading of the two wheel robot
+geometry_msgs::Quaternion random_quaternion() {
+    // alpha is the rotation angle along z axis
+    double half_alpha = (float)(rand() % 360 - 180)/2.0 * M_PI/180.0;
+    geometry_msgs::Quaternion output_quaternion;
+    output_quaternion.x = 0;
+    output_quaternion.y = 0;
+    output_quaternion.z = sin(half_alpha);
+    output_quaternion.w = cos(half_alpha);
+    return output_quaternion;
+}
+
 // int to string converter
 std::string intToString(int a) {
     std::stringstream ss;
@@ -291,6 +303,7 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
         add_model_srv_msg.request.initial_pose.position.x = new_position[0];
         add_model_srv_msg.request.initial_pose.position.y = new_position[1];
         add_model_srv_msg.request.initial_pose.position.z = 0.0;
+        add_model_srv_msg.request.initial_pose.orientation = random_quaternion();
         bool call_service = add_model_client.call(add_model_srv_msg);
         if (call_service) {
             if (add_model_srv_msg.response.success) {

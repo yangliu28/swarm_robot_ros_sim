@@ -11,7 +11,7 @@
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "two_wheel_robot_batch_add");
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");  // private namespace, to get private parameters
 
     // check if service is ready, "/swarm_sim/two_wheel_robot"
     ros::Duration half_sec(0.5);
@@ -34,15 +34,20 @@ int main(int argc, char **argv) {
     // parameter: robot_quantity
     int robot_quantity = 10;  // the default value
     bool get_robot_quantity = nh.getParam("robot_quantity", robot_quantity);
-    if (get_robot_quantity)
+    if (get_robot_quantity) {
         ROS_INFO_STREAM("using robot quantity passed in: " << robot_quantity);
+        // delete this parameter, in case it will be reused because it continues to exist
+        nh.deleteParam("robot_quantity");
+    }
     else
         ROS_INFO_STREAM("using default robot quantity: 10");
     // parameter: half_range
     double half_range = 1.0;  // the default value
     bool get_half_range = nh.getParam("half_range", half_range);
-    if (get_half_range)
+    if (get_half_range) {
         ROS_INFO_STREAM("using half range passed in: " << half_range);
+        nh.deleteParam("half_range");
+    }
     else
         ROS_INFO_STREAM("using default half range: 1.0");
 
@@ -54,6 +59,7 @@ int main(int argc, char **argv) {
 
     // call service to add robot repeatedly
     bool call_service;
+    ros::Duration minimal_delay(0.01);  // this is a moderate waiting time
     for (int i=0; i<robot_quantity; i++) {
         // call the service to add one robot randomly
         call_service = two_wheel_robot_update_client.call(two_wheel_robot_update_srv_msg);
@@ -63,30 +69,36 @@ int main(int argc, char **argv) {
                     ROS_INFO("success");
                     break;
                 case swarm_robot_srv::two_wheel_robot_updateResponse::ADD_FAIL_NO_RESPONSE:
-                    ROS_WARN("add fail because of no response from gazebo");
+                    ROS_WARN("add fail because no response from gazebo");
                     break;
                 case swarm_robot_srv::two_wheel_robot_updateResponse::ADD_FAIL_TOO_CROWDED:
                     ROS_WARN("add fail because the range is too crowded");
                     break;
                 case swarm_robot_srv::two_wheel_robot_updateResponse::FAIL_OTHER_REASONS:
+                    // keep trying for this case
                     ROS_WARN("fail because of other reasons");
+                    while (!(call_service
+                        = two_wheel_robot_update_client.call(two_wheel_robot_update_srv_msg))) {
+                        ROS_WARN("keep trying to add one robot");
+                        minimal_delay.sleep();
+                    }
+                    ROS_INFO("success after trials");
                     break;
                 default:
-                    // there is no reason to be here, otherwise problems in service request
+                    // there is no reason to be here, otherwise there is problems in service request
                     ROS_ERROR("wrong response code, check the service request for details");
             }
         }
         else {
             ROS_ERROR("fail to connect to service /swarm_sim/two_wheel_robot_update");
         }
+
+        // delay for a minimal time, so that topic message in manager can update
+        minimal_delay.sleep();
     }
 
     return 0;
 
 }
 
-
-
-// fix the parameters passing
-// add random orentation when adding new robots
 

@@ -119,12 +119,16 @@
       izz="0.0000001125" />
   </inertial>
 
+  <!-- use regular cylinder if wanting smooth visual experience -->
+  <!-- remember to set color to grey in gazebo tag -->
+  <!-- or low definition wheel if wanting to observe wheel rotation -->
+  <!-- high definition wheel is not practical, too slow to visualize -->
   <visual>
     <origin xyz="0 0 0.002" />
     <geometry>
-      <!-- <cylinder radius="0.015" length="0.004" /> -->
+      <cylinder radius="0.015" length="0.004" />
       <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left_hd.dae"/> -->
-      <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left_ld.dae"/>
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_left_ld.dae"/> -->
     </geometry>
   </visual>
 
@@ -140,7 +144,7 @@
 </link>
 
 <gazebo reference="left_wheel">
-  <!-- <material>Gazebo/Grey</material> -->
+  <material>Gazebo/Grey</material>
   <mu1>1</mu1>
   <mu2>0.5</mu2>
 </gazebo>
@@ -190,9 +194,9 @@
   <visual>
     <origin xyz="0 0 0.002" />
     <geometry>
-      <!-- <cylinder radius="0.015" length="0.004" /> -->
+      <cylinder radius="0.015" length="0.004" />
       <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right_hd.dae"/> -->
-      <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right_ld.dae"/>
+      <!-- <mesh filename="package://swarm_robot_description/urdf/mesh/twowheel_right_ld.dae"/> -->
     </geometry>
   </visual>
 
@@ -207,7 +211,7 @@
 </link>
 
 <gazebo reference="right_wheel">
-  <!-- <material>Gazebo/Grey</material> -->
+  <material>Gazebo/Grey</material>
   <mu1>1</mu1>
   <mu2>0.5</mu2>
 </gazebo>
