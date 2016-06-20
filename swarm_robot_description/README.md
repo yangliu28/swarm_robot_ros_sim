@@ -25,18 +25,9 @@ robot goes in curves
 
 wheels can always rotate at constant speed or the robot move in a zigzag way
 
-
-
-
-
-
-
-
 a controller node subscribe to robot information, and apply torque to control the wheel speed, subscribe to wheel speed command node
 
 the controller node is also compatible with adding or deleting operation
-
-
 
 
 

@@ -1,17 +1,29 @@
 // this node add a number of two wheel robots by talking to the manager node
 // through the "/swarm_sim/two_wheel_robot_update" service
 
-// work as a supplementary function of the manager node
+// work as a supplementary function of the two wheel robot manager node
 // when batch adding, a distribution range needs to specified
 
 
 #include <ros/ros.h>
 #include <swarm_robot_srv/two_wheel_robot_update.h>
 
-
 int main(int argc, char **argv) {
     ros::init(argc, argv, "two_wheel_robot_batch_add");
     ros::NodeHandle nh("~");  // private namespace, to get private parameters
+
+    // handshake with robot name in parameter server
+    std::string robot_name;
+    bool get_name;
+    get_name = nh.getParam("/swarm_sim/robot_name", robot_name);
+    if (!get_name) {
+        ROS_ERROR("simulation environment(parameters) is not set");
+        return 0;
+    }
+    if (robot_name != "two_wheel_robot") {
+        ROS_ERROR("wrong robot according to parameter server");
+        return 0;
+    }
 
     // check if service is ready, "/swarm_sim/two_wheel_robot"
     ros::Duration half_sec(0.5);

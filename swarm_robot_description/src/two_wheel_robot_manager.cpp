@@ -338,7 +338,7 @@ int main(int argc, char **argv) {
     get_name = nh.getParam("/swarm_sim/robot_name", robot_name);
     get_urdf = nh.getParam("/swarm_sim/two_wheel_robot_urdf", two_wheel_robot_urdf);
     if (!(get_name && get_urdf)) {
-        ROS_ERROR("parameter server is not set");
+        ROS_ERROR("simulation environmnet(parameters) is not set");
         return 0;  // return when parameter server is not good
     }
     if (robot_name != "two_wheel_robot") {

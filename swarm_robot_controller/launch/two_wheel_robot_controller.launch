@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
-  <node name="swarm_robot_pos_publisher" pkg="swarm_robot_controller" type="swarm_robot_pos_publisher"/>
-
+  <!-- obsoleted -->
+  <!-- <node name="swarm_robot_pos_publisher" pkg="swarm_robot_controller" type="swarm_robot_pos_publisher"/>
   <node name="two_wheel_pos_publisher" pkg="swarm_robot_controller" type="two_wheel_pos_publisher"/>
-
   <node name="two_wheel_pos_minimal_controller" pkg="swarm_robot_controller" type="two_wheel_pos_minimal_controller"/>
+  <node name="two_wheel_traj_interpolator_as" pkg="swarm_robot_controller" type="two_wheel_traj_interpolator_as"/> -->
 
-  <node name="two_wheel_traj_interpolator_as" pkg="swarm_robot_controller" type="two_wheel_traj_interpolator_as"/>
+
+
 
 </launch>
 
