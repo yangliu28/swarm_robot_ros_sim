@@ -41,9 +41,9 @@
   <!-- spawn the enclosure in gazebo -->
   <!-- <node name="enclosure" pkg="gazebo_ros" type="spawn_model" args="-file $(find swarm_robot_description)/urdf/enclosure_halfside_3.0.urdf -urdf -model enclosure_halfside_3.0"/> -->
 
-  <!-- spawn multiple robot models in gazebo -->
-  <!-- output= "screen" means all the ROS_INFO will show on the screen instead of a log, useful -->
-  <!-- <node name= "swarm_spawner_gazebo_client" pkg= "swarm_robot_description" type= "swarm_spawner_gazebo_client" output= "screen" /> -->
+
+  <!-- the two wheel robot manager node -->
+  <node name="two_wheel_robot_manager" pkg="swarm_robot_description" type="two_wheel_robot_manager" ns="swarm_sim" output="screen" />
 
 
 </launch>

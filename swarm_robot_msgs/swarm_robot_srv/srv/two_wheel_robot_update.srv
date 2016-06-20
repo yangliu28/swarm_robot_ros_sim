@@ -10,6 +10,7 @@
 int32 CODE_DELETE = -1
 int32 CODE_DELETE_ALL = 0
 int32 CODE_ADD = 1
+# first letter of True and False should be capitalized
 bool ADD_MODE_RANDOM = False
 bool ADD_MODE_SPECIFIED = True
 # request fields

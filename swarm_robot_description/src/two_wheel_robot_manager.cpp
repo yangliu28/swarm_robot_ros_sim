@@ -30,7 +30,8 @@
 #include <cmath>
 #include <stdlib.h>  // rand()
 
-const double SAFE_DIST = 46.5;  // the collision free distance between two robots
+// the distance unit in gazebo is meter
+const double SAFE_DIST = 0.0465;  // the collision free distance between two robots
 
 // global variables
 // THE container maintained by this node
@@ -66,8 +67,8 @@ bool position_availibility(std::vector<double> position_2d) {
     // return true if input position is ok to add a robot
     int current_robot_quantity = current_robots.index.size();
     for (int i=0; i<current_robot_quantity; i++) {
-        double dist = sqrt(pow(position_2d[0] - current_robots.x[i], 2),
-            pow(position_2d[1] - current_robots.y[i], 2));
+        double dist = sqrt(pow(position_2d[0] - current_robots.x[i], 2)
+            + pow(position_2d[1] - current_robots.y[i], 2));
         if (dist < SAFE_DIST) return false;
     }
     // if here, the position is safe
@@ -82,6 +83,7 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
     int model_quantity = current_model_states.name.size();
     // the index of robots in the container
     std::vector<int32_t> container_index = current_robots.index;
+    int container_size = container_index.size();
     for (int i=0; i<model_quantity; i++) {
         // check if it is a two wheel robot
         // there is a underscore between the name and the index
@@ -93,7 +95,6 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
             std::string index_str = current_model_states.name[i].substr(16);
             int index_parsed = std::atoi(index_str.c_str());
             // search in the container
-            int container_size = container_index.size();
             bool parsed_index_found = false;
             for (int j=0; j<container_size; j++) {
                 // the size of container_index may change for each i
@@ -103,7 +104,9 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
                     current_robots.y[j] = current_model_states.pose[i].position.y;
                     current_robots.orientation[j]
                         = quaternion_to_angle(current_model_states.pose[i].orientation);
-                    container_index.erase(j);
+                    // mark as -1, meaning position is updated
+                    // will check later if there is any element not marked, i.e., not in gazebo
+                    container_index[j] = -1;
                     parsed_index_found = true;
                     break;
                 }
@@ -121,21 +124,21 @@ void modelStatesCallback(const gazebo_msgs::ModelStates& current_model_states) {
             }
         }
     }
-    // update the container if there is deletion in gazebo
-    if (container_index.size() != 0) {
-        int container_index_size = container_index.size();
-        for (int i=0; i<container_index_size; i++) {
+    // update the container if there is any deletion in gazebo
+    for (int i=0; i<container_size; i++) {
+        if (container_index[i] != -1) {
+            // not marked with -1, there is a deletion
             int current_robots_index_size = current_robots.index.size();
             for (int j=0; j<current_robots_index_size; j++) {
                 // the index should be found before this loop ends
                 if (container_index[i] == current_robots.index[j]) {
-                    // erase the node
-                    current_robots.index.erase(j);
-                    current_robots.x.erase(j);
-                    current_robots.y.erase(j);
-                    current_robots.orientation.erase(j);
-                    current_robots.left_wheel_vel.erase(j);
-                    current_robots.right_wheel_vel.erase(j);
+                    // erase the robot
+                    current_robots.index.erase(current_robots.index.begin() + j);
+                    current_robots.x.erase(current_robots.x.begin() + j);
+                    current_robots.y.erase(current_robots.y.begin() + j);
+                    current_robots.orientation.erase(current_robots.orientation.begin() + j);
+                    current_robots.left_wheel_vel.erase(current_robots.left_wheel_vel.begin() + j);
+                    current_robots.right_wheel_vel.erase(current_robots.right_wheel_vel.begin() + j);
                     ROS_INFO_STREAM("robot deletion detected: two_wheel_robot_"
                         << intToString(container_index[i]));
                     break;
@@ -165,7 +168,7 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
             ROS_ERROR("requested deletion quantity exceeds existed robots");
             response.response_code
                 = swarm_robot_srv::two_wheel_robot_updateResponse::DELETE_FAIL_EXCEED_QUANTITY;
-            return false;
+            return true;
         }
         else {
             // start randomly choose robot to delete
@@ -175,8 +178,9 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
                 // index of the vector "container_index"
                 int container_index_index = rand() % container_index.size();
                 int delete_index = container_index[container_index_index];
-                container_index.erase(container_index_index);  // avoid deletion on same robot
-                delete_model_srv_msg.model_name = "two_wheel_robot_" + intToString(delete_index);
+                // avoid deletion on same robot
+                container_index.erase(container_index.begin() + container_index_index);
+                delete_model_srv_msg.request.model_name = "two_wheel_robot_" + intToString(delete_index);
                 bool call_service = delete_model_client.call(delete_model_srv_msg);
                 if (call_service) {
                     if (delete_model_srv_msg.response.success) {
@@ -192,7 +196,7 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
                     ROS_ERROR("fail to connect with gazebo server");
                     response.response_code
                         = swarm_robot_srv::two_wheel_robot_updateResponse::DELETE_FAIL_NO_RESPONSE;
-                    return false;
+                    return true;
                 }
             }
         }
@@ -204,7 +208,7 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
         int delete_robot_quantity = container_index.size();
         for (int i=0; i<delete_robot_quantity; i++) {
             int delete_index = container_index[i];
-            delete_model_srv_msg.model_name = "two_wheel_robot_" + intToString(delete_index);
+            delete_model_srv_msg.request.model_name = "two_wheel_robot_" + intToString(delete_index);
             bool call_service = delete_model_client.call(delete_model_srv_msg);
             if (call_service) {
                 if (delete_model_srv_msg.response.success) {
@@ -220,7 +224,7 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
                 ROS_ERROR("fail to connect with gazebo server");
                 response.response_code
                     = swarm_robot_srv::two_wheel_robot_updateResponse::DELETE_FAIL_NO_RESPONSE;
-                return false;
+                return true;
             }
         }
     }
@@ -244,7 +248,7 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
                 ROS_ERROR("add robot at random fail because range is too crowded");
                 response.response_code
                     = swarm_robot_srv::two_wheel_robot_updateResponse::ADD_FAIL_TOO_CROWDED;
-                return false;
+                return true;
             }
             // if here, position randomly generated is ok to be used
         }
@@ -256,13 +260,20 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
                 ROS_ERROR("add robot at specified position fail because it is occupied");
                 response.response_code
                     = swarm_robot_srv::two_wheel_robot_updateResponse::ADD_FAIL_OCCUPIED;
-                return false;
+                return true;
             }
             // if here, position passed in is ok to be used
         }
         // add the robot using position either from random generated or specified
-        // added robot will always queue after the last robot
-        std::string new_model_name = "two_wheel_robot_" + intToString(current_robots.index.back() + 1);
+        std::string new_model_name;
+        if (current_robots.index.size() == 0) {
+            // the container is empty, initialize with index 0
+            new_model_name = "two_wheel_robot_0";
+        }
+        else {
+            // queue after the last robot in the container
+            new_model_name = "two_wheel_robot_" + intToString(current_robots.index.back() + 1);
+        }
         add_model_srv_msg.request.model_name = new_model_name;
         add_model_srv_msg.request.model_xml = two_wheel_robot_urdf;
         add_model_srv_msg.request.robot_namespace = new_model_name;
@@ -282,7 +293,7 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
             ROS_ERROR("fail to connect with gazebo server");
             response.response_code
                 = swarm_robot_srv::two_wheel_robot_updateResponse::ADD_FAIL_NO_RESPONSE;
-            return false;
+            return true;
         }
     }
     return true;
@@ -311,13 +322,13 @@ int main(int argc, char **argv) {
     // check if gazebo is up and running by check service "/gazebo/set_physics_properties"
     // this service seems like the last service hosted by gazebo
     ros::Duration half_sec(0.5);
-    bool gazebo_ready = ros::service::exist("/gazebo/set_physics_properties", true);
+    bool gazebo_ready = ros::service::exists("/gazebo/set_physics_properties", true);
     if (!gazebo_ready) {
         // gazebo not ready
         while (!gazebo_ready) {
             ROS_INFO("waiting for gazebo");
             half_sec.sleep();
-            gazebo_ready = ros::service::exist("/gazebo/set_physics_properties", true);
+            gazebo_ready = ros::service::exists("/gazebo/set_physics_properties", true);
         }
     }
 
@@ -351,6 +362,8 @@ int main(int argc, char **argv) {
         , delete_model_client, two_wheel_robot_urdf));
 
     // publish loop
+    // the topic "/swarm_sim/two_wheel_robot" will publish at full speed, as fast as possible
+    // but limited by model states callback (1000hz at most)
     while (ros::ok()) {
         // get the wheel speed for the maintained robots
         int current_robot_quantity = current_robots.index.size();
@@ -358,7 +371,7 @@ int main(int argc, char **argv) {
             // only update wheel velocities when positions have been update by model states callback
             for (int i=0; i<current_robot_quantity; i++) {
                 // get left wheel velocity
-                joint_properties_srv_msg.joint_name
+                joint_properties_srv_msg.request.joint_name
                     = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::left_motor";
                 bool call_service = joint_properties_client.call(joint_properties_srv_msg);
                 // if call service not successful, it will leave the joint velocity unchanged
@@ -377,9 +390,9 @@ int main(int argc, char **argv) {
                     // do not return here
                 }
                 // get right wheel velocity
-                joint_properties_srv_msg.joint_name
+                joint_properties_srv_msg.request.joint_name
                     = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::right_motor";
-                bool call_service = joint_properties_client.call(joint_properties_srv_msg);
+                call_service = joint_properties_client.call(joint_properties_srv_msg);
                 // if call service not successful, it will leave the joint velocity unchanged
                 if (call_service) {
                     if (!joint_properties_srv_msg.response.success) {
