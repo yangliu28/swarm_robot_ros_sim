@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // check if service is ready, "/swarm_sim/two_wheel_robot"
+    // check if service is ready, "/swarm_sim/two_wheel_robot_update"
     ros::Duration half_sec(0.5);
     bool service_ready = ros::service::exists("/swarm_sim/two_wheel_robot_update", true);
     if (!service_ready) {
