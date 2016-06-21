@@ -11,6 +11,7 @@
 #include <swarm_robot_msg/two_wheel_robot.h>
 #include <swarm_robot_msg/two_wheel_robot_wheel_vel_cmd.h>
 #include <gazebo_msgs/ApplyJointEffort.h>
+#include <string>
 
 const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to judge if topics are active
 const double CONTROL_PERIOD = 0.001;
@@ -21,6 +22,13 @@ swarm_robot_msg::two_wheel_robot_wheel_vel_cmd current_vel_cmd;
 // time stamps for callbacks, used to check topic activity
 ros::Time two_wheel_robot_topic_timer, vel_cmd_topic_timer;
 bool two_wheel_robot_topic_active, vel_cmd_topic_active;
+
+// int to string converter
+std::string intToString(int a) {
+    std::stringstream ss;
+    ss << a;
+    return ss.str();
+}
 
 // the callback for getting two wheel robot information
     // the update-to-date robot status will be decided only by this topic
@@ -90,6 +98,8 @@ int main(int argc, char **argv) {
     // control wheel velocity loop
     ros::Time timer_now;
     ros::Rate loop_rate(1/CONTROL_PERIOD);
+    ros::Duration torque_duration(CONTROL_PERIOD);  // duration for torque to be exerted on wheel
+    apply_joint_effort_srv_msg.request.duration = torque_duration;
     while (ros::ok()) {
         // check if two wheel robot and wheel vel cmd topics are active
         timer_now = ros::Time::now();
@@ -104,21 +114,57 @@ int main(int argc, char **argv) {
 
         // 
         if (two_wheel_robot_topic_active) {
-            // preapre to control wheel velocity only when this topic is ready
+            // control wheel velocity only when this topic is ready
+            // prepare the velocity commands to be used in the control
             int robot_quantity = current_robots.index.size();
             swarm_robot_msg::two_wheel_robot_wheel_vel_cmd processed_vel_cmd;
             processed_vel_cmd.index = current_robots.index;
             processed_vel_cmd.left_wheel_vel_cmd.resize(robot_quantity);
             processed_vel_cmd.right_wheel_vel_cmd.resize(robot_quantity);
-            // prepare the processed_vel_cmd from current_vel_cmd
+            // get data for processed_vel_cmd from current_vel_cmd
             if (vel_cmd_topic_active) {
                 // the velocity command topic is active
-                
+                // start mapping for each other
+                for (int i=0; i<robot_quantity; i++) {
+                    // searching in current_vel_cmd
+                    bool found_vel_cmd = false;
+                    for (int j=0; j<current_vel_cmd.index.size(); j++) {
+                        if (processed_vel_cmd.index[i] == current_vel_cmd.index[j]) {
+                            processed_vel_cmd.left_wheel_vel_cmd[i]
+                                = current_vel_cmd.left_wheel_vel_cmd[j];
+                            processed_vel_cmd.right_wheel_vel_cmd[i]
+                                = current_vel_cmd.right_wheel_vel_cmd[j];
+                            found_vel_cmd = true;
+                            break;
+                        }
+                    }
+                    // fail to find corresponding velocity command
+                    // this happens when new robot is added in gazebo, and vel_cmd is not updated
+                    if (!found_vel_cmd) {
+                        // set vel cmd to zero, not moving
+                        processed_vel_cmd.left_wheel_vel_cmd[i] = 0.0;
+                        processed_vel_cmd.right_wheel_vel_cmd[i] = 0.0;
+                    }
+                }
             }
+            else {
+                // the velocity command topic is not active
+                for (int i=0; i<robot_quantity; i++) {
+                    // set vel cmd to zero
+                    processed_vel_cmd.left_wheel_vel_cmd[i] = 0.0;
+                    processed_vel_cmd.right_wheel_vel_cmd[i] = 0.0;
+                }
+            }
+            // control wheel velocity by apply joint effort
             for (int i=0; i<robot_quantity; i++) {
-
+                apply_joint_effort_srv_msg.request.joint_name
+                    = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::left_motor";
+                apply_joint_effort_srv_msg.request.effort = 
             }
+
+
         }
+
 
 
 
@@ -128,6 +174,7 @@ int main(int argc, char **argv) {
         loop_rate.sleep();
         ros::spinOnce();  // let the global variables update
     }
+
 
 
 
