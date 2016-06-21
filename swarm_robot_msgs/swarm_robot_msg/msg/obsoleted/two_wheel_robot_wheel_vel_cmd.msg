@@ -6,3 +6,5 @@ float64[] left_wheel_vel_cmd
 float64[] right_wheel_vel_cmd
 
 
+# obsolete because new gazebo service is used to control wheel velocity
+

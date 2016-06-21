@@ -15,6 +15,7 @@
 
 const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to judge if topics are active
 const double CONTROL_PERIOD = 0.001;
+const double KP = 1.0;  // proportional control feedback ratio
 
 // global variables
 swarm_robot_msg::two_wheel_robot current_robots;
@@ -168,6 +169,10 @@ int main(int argc, char **argv) {
 
 
 
+// not finished, turn to another velocity control method
+// service server to tune proportional feedback parameter
+
+
 
 
 
@@ -175,13 +180,9 @@ int main(int argc, char **argv) {
         ros::spinOnce();  // let the global variables update
     }
 
-
-
-
-
-
-
+    return 0;
 }
+
 
 
 
