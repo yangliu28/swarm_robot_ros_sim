@@ -9,6 +9,8 @@
 #include <gazebo_msgs/SetJointProperties.h>
 #include <math.h>
 
+#include <iostream>
+
 // flow control parameters
 const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is active
 const double CONTROL_PERIOD = 0.001;
@@ -93,6 +95,8 @@ int main(int argc, char **argv) {
         = nh.serviceClient<gazebo_msgs::SetJointProperties>("/gazebo/set_joint_properties");
     gazebo_msgs::SetJointProperties set_joint_properties_srv_msg;
     // usually this is enough for fast response
+    set_joint_properties_srv_msg.request.ode_joint_config.fmax.resize(1);  // in case of segmentation error
+    set_joint_properties_srv_msg.request.ode_joint_config.vel.resize(1);
     set_joint_properties_srv_msg.request.ode_joint_config.fmax[0] = 1.0;
 
     // initialize callback timer
@@ -109,6 +113,10 @@ int main(int argc, char **argv) {
 
         // check if two wheel robot topic is active
         timer_now = ros::Time::now();
+
+        // ************************************
+        ROS_INFO_STREAM("period for topic activity: " << (timer_now - two_wheel_robot_topic_timer).toSec());
+
         if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD) {
             // the topic is been actively published
             // set the stop_all_robot_once flag, prepare when topic out of active state
@@ -130,6 +138,9 @@ int main(int argc, char **argv) {
                     }
                 }
             }
+
+            // ********************************
+            ROS_WARN("topic is active");
 
             // 2.sort the distance and record the index change
             double distance_sort[robot_quantity][robot_quantity];
@@ -161,6 +172,9 @@ int main(int argc, char **argv) {
                 }
             }
 
+            // ***********************************
+            ROS_INFO("6.program goes here");
+
             // 3.find all neighbors that will be used in force feedback control
             // find all the neighbors within the upper limit, choose closest 6 if exceed 6
             // if neighbors are sparse, override upper limit and choose cloest 3
@@ -189,6 +203,9 @@ int main(int argc, char **argv) {
                 }
             }
 
+            // ***********************************
+            ROS_INFO("7.program goes here");
+
             // 4.calculate feedback vector for each robot
             double feedback_vector[robot_quantity][2];  // vector in x and y for each robot
             double distance_diff;
@@ -213,6 +230,9 @@ int main(int argc, char **argv) {
                     = sqrt(pow(feedback_vector[i][0], 2) + pow(feedback_vector[i][1], 2));
                 feedback_vector_direction[i] = atan2(feedback_vector[i][1], feedback_vector[i][0]);
             }
+
+            // ***********************************
+            ROS_INFO("8.program goes here");
 
             // 5.calculate the wheel velocities
             // the wheel velocities are calculate so that the robot will move
@@ -312,6 +332,15 @@ int main(int argc, char **argv) {
                 }
             }
 
+            // ***********************************
+            ROS_INFO("9.program goes here");
+
+            // print out the wheel vel data
+            for (int i=0; i<robot_quantity; i++) {
+                std::cout << "robot number " << current_robots.index[i] << ": left vel, "
+                    << wheel_vel[i][0] << ", right vel, " << wheel_vel[i][1];
+            }
+
             // 6. send service request of wheel velocities
             bool call_service;
             for (int i=0; i<robot_quantity; i++) {
@@ -342,6 +371,10 @@ int main(int argc, char **argv) {
         }
         else {
             // the topic is not active
+
+            // ********************************
+            ROS_WARN("when topic is inactive");
+
             if (stop_all_robot_once) {
                 // set wheel velocity of all robots to zero according to last topic update
                 bool call_service;
@@ -373,6 +406,8 @@ int main(int argc, char **argv) {
                 stop_all_robot_once = false;
             }
         }
+
+        break;  // debug purpose
 
         loop_rate.sleep();
         ros::spinOnce();  // let the global variables update
