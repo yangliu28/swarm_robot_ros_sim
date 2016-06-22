@@ -4,6 +4,20 @@
 #include <swarm_robot_msg/two_wheel_robot.h>
 #include <gazebo_msgs/SetJointProperties.h>
 
+const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is active
+const double CONTROL_PERIOD = 0.001;
+
+// global variables
+swarm_robot_msg::two_wheel_robot current_robots;
+// time stamp for callback, used to check topic activity
+ros::Time two_wheel_robot_topic_timer;
+
+// callback for getting two wheel robot information
+void twoWheelRobotCallback(const swarm_robot_msg::two_wheel_robot& input_msg) {
+    // update the time stamp every time the callback is invoked
+    two_wheel_robot_topic_timer = ros::Time::now();
+    current_robots = input_msg;  // update in global variables
+}
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "two_wheel_robot_dispersion");
@@ -43,9 +57,41 @@ int main(int argc, char **argv) {
     ros::ServiceClient set_joint_properties_client
         = nh.serviceClient<gazebo_msgs::SetJointProperties>("/gazebo/set_joint_properties");
     gazebo_msgs::SetJointProperties set_joint_properties_srv_msg;
+    // usually this is enough for fast response
+    set_joint_properties_srv_msg.request.ode_joint_config = 1.0;
+
+    // initialize callback timer
+    two_wheel_robot_topic_timer = ros::Time::now();
+    // delay for a while to avoid false judgement of topic activity
+    ros::Duration(TOPIC_ACTIVE_PERIOD + 0.1).sleep();
+
+    // dispersion control loop
+    ros::Time timer_now;
+    ros::Rate loop_rate(1/CONTROL_PERIOD);
+    bool stop_once_all_robots = false;  // stop all robots for one time when topic is inactive
+    while (ros::ok()) {
+        // check if two wheel robot topic is active
+        timer_now = ros::Time::now();
+        if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD) {
+            // the topic is been actively published
+            // set the stop_once_all_robot flag, prepare when topic out of active state
+            stop_once_all_robots = true;
+            //
+        }
+        else {
+            // the topic is not active
+            if (!stop_once_all_robots) {
+                // set wheel speed of all robots to zero according to last topic update
+            }
+        }
 
 
 
 
+        loop_rate.sleep();
+        ros::spinOnce();  // let the global variables update
+    }
+
+    return 0;
 }
 
