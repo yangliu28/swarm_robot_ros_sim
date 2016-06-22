@@ -1,15 +1,24 @@
 // this node is the dispersion simulation of two wheel robots
 
+// ros communication:
+    // subscribe to topic "/swarm_sim/two_wheel_robot"
+    // service client to service "/gazebo/set_joint_properties"
+
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
 #include <gazebo_msgs/SetJointProperties.h>
 #include <math.h>
 
+// flow control parameters
 const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is active
 const double CONTROL_PERIOD = 0.001;
-
+// simulation control parameters
+double spring_length = 0.7;  // default spring length, may change from private parameter
+double upper_limit_ratio = 0.30;
 const int NEIGHBOR_NUM_L_LIMIT = 3;
 const int NEIGHBOR_NUM_H_LIMIT = 6;
+const double FEEDBACK_RATIO = 0.382/2.0;
+const double STABLE_THRESHOLD = 0.02;
 
 // global variables
 swarm_robot_msg::two_wheel_robot current_robots;
@@ -54,7 +63,6 @@ int main(int argc, char **argv) {
     ROS_INFO("gazebo service set_joint_properties is ready");
 
     // get settings for this simulation from private parameter
-    double spring_length = 0.7;  // default spring length
     bool get_spring_length = nh.getParam("spring_length", spring_length);
     if (get_spring_length) {
         ROS_INFO_STREAM("using spring length passed in: " << spring_length);
@@ -64,7 +72,6 @@ int main(int argc, char **argv) {
     else
         ROS_INFO_STREAM("using default spring length: 0.7");
     // calculate other parameter depending on spring length
-    double upper_limit_ratio = 0.30;
     double upper_limit = spring_length * (1 + upper_limit_ratio);
 
     // instantiate a subscriber to topic "/swarm_sim/two_wheel_robot"
@@ -86,14 +93,14 @@ int main(int argc, char **argv) {
     // dispersion control loop
     ros::Time timer_now;
     ros::Rate loop_rate(1/CONTROL_PERIOD);
-    bool stop_once_all_robots = false;  // stop all robots for one time when topic is inactive
+    bool stop_all_robot_once = false;  // stop all robots for one time when topic is inactive
     while (ros::ok()) {
         // check if two wheel robot topic is active
         timer_now = ros::Time::now();
         if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD) {
             // the topic is been actively published
-            // set the stop_once_all_robots flag, prepare when topic out of active state
-            stop_once_all_robots = true;
+            // set the stop_all_robot_once flag, prepare when topic out of active state
+            stop_all_robot_once = true;
 
             // 1.calculate distance between any two robots
             int robot_quantity = current_robots.index.size();
@@ -171,15 +178,37 @@ int main(int argc, char **argv) {
                 }
             }
 
-            // 4.
+            // 4.calculate feedback vector for each robot
+            double feedback_vector[robot_quantity][2];  // vector in x and y for each robot
+            double distance_diff;
+            for (int i=0; i<robot_quantity; i++) {
+                feedback_vector[i][0] = 0.0;
+                feedback_vector[i][1] = 0.0;
+                for (int j=0; j<=neighbor_num[i]; j++) {
+                    distance_diff = distance_sort[i][j] - spring_length;
+                    // feedback on x
+                    feedback_vector[i][0] = feedback_vector[i][0] + FEEDBACK_RATIO * distance_diff
+                        * (current_robots.x[index_sort[i][j]] - current_robots.x[i]) / distance_sort[i][j];
+                    // feedback on y
+                    feedback_vector[i][1] = feedback_vector[i][1] + FEEDBACK_RATIO * distance_diff
+                        * (current_robots.y[index_sort[i][j]] - current_robots.y[i]) / distance_sort[i][j];
+                }
+            }
+
+            // 5.calculate the wheel velocities and send service request
+            // the wheel velocities are calculate so that the robot will move
+            // in a constant radius curve to the destination defined by the feedback vector
+            
+            double wheel_vel[robot_quantity][2];
+
         }
         else {
             // the topic is not active
-            if (stop_once_all_robots) {
+            if (stop_all_robot_once) {
                 // set wheel speed of all robots to zero according to last topic update
-                
-                // reset the stop_once_all_robots flag
-                stop_once_all_robots = false;
+
+                // reset the stop_all_robot_once flag
+                stop_all_robot_once = false;
             }
         }
 
