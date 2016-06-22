@@ -312,26 +312,66 @@ int main(int argc, char **argv) {
             }
 
             // 6. send service request of wheel velocities
+            bool call_service;
             for (int i=0; i<robot_quantity; i++) {
                 // left wheel
                 set_joint_properties_srv_msg.request.joint_name
-                    = "two_wheel_robot_" + intToString(i) + "::left_motor";
+                    = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::left_motor";
                 set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = wheel_vel[i][0];
-
+                call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
+                if (call_service)
+                    if (!set_joint_properties_srv_msg.response.success)
+                        // possibly the robot not found
+                        ROS_WARN("the robot model not found when set left wheel vel");
+                else
+                    ROS_ERROR("fail to connect with gazebo server when set left wheel vel");
+                // right wheel
+                set_joint_properties_srv_msg.request.joint_name
+                    = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::right_motor";
+                set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = wheel_vel[i][1];
+                call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
+                if (call_service)
+                    if (!set_joint_properties_srv_msg.response.success)
+                        // possibly the robot not found
+                        ROS_WARN("the robot model not found when set right wheel vel");
+                else
+                    ROS_ERROR("fail to connect with gazebo server when set right wheel vel");
             }
+
         }
         else {
             // the topic is not active
             if (stop_all_robot_once) {
-                // set wheel speed of all robots to zero according to last topic update
-
+                // set wheel velocity of all robots to zero according to last topic update
+                bool call_service;
+                for (int i=0; i<robot_quantity; i++) {
+                    // left wheel
+                    set_joint_properties_srv_msg.request.joint_name
+                        = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::left_motor";
+                    set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = 0.0;
+                    call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
+                    if (call_service)
+                        if (!set_joint_properties_srv_msg.response.success)
+                            // possibly the robot not found
+                            ROS_WARN("the robot model not found when reset left wheel vel");
+                    else
+                        ROS_ERROR("fail to connect with gazebo server when reset left wheel vel");
+                    // right wheel
+                    set_joint_properties_srv_msg.request.joint_name
+                        = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::right_motor";
+                    set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = 0.0;
+                    call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
+                    if (call_service)
+                        if (!set_joint_properties_srv_msg.response.success)
+                            // possibly the robot not found
+                            ROS_WARN("the robot model not found when reset right wheel vel");
+                    else
+                        ROS_ERROR("fail to connect with gazebo server when reset right wheel vel");
+                }
                 // reset the stop_all_robot_once flag
                 stop_all_robot_once = false;
             }
         }
-
-
-
 
         loop_rate.sleep();
         ros::spinOnce();  // let the global variables update
