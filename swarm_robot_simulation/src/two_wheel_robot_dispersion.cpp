@@ -19,7 +19,7 @@ const int NEIGHBOR_NUM_L_LIMIT = 3;
 const int NEIGHBOR_NUM_H_LIMIT = 6;
 const double DISTANCE_FEEDBACK_RATIO = 0.382/2.0;
 const double VEL_RATIO = 1.0;  // the ratio of robot velocity relative to feedback vector
-const double STABLE_THRESHOLD = 0.02;
+const double STABLE_THRESHOLD = 0.02;  // temperarily not used
 const double LEFT_WHEEL_POSITION = -0.0157;
 const double RIGHT_WHEEL_POSITION = 0.0157;  // right is positive direction
 
@@ -105,6 +105,8 @@ int main(int argc, char **argv) {
     ros::Rate loop_rate(1/CONTROL_PERIOD);
     bool stop_all_robot_once = false;  // stop all robots for one time when topic is inactive
     while (ros::ok()) {
+        int robot_quantity = current_robots.index.size();
+
         // check if two wheel robot topic is active
         timer_now = ros::Time::now();
         if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD) {
@@ -113,7 +115,6 @@ int main(int argc, char **argv) {
             stop_all_robot_once = true;
 
             // 1.calculate distance between any two robots
-            int robot_quantity = current_robots.index.size();
             double distance[robot_quantity][robot_quantity];
             for (int i=0; i<robot_quantity; i++) {
                 for (int j=i; j<robot_quantity; j++) {
