@@ -13,16 +13,6 @@
   <!-- experimental setup of the robots -->
   <arg name="robot_name" default="two_wheel_robot"/>
 
-  <!-- obsoleted -->
-  <!-- notes for robot model file path:
-  the running path when this launch file is launched is "/home/yang/.ros"
-  in no matter what path you launch the launch file
-  so the robot model path should better be an absolute one from root directory
-  and should not be changed when the file location is not changed
-  to examining the running path of the launch file
-  the relative path start with "../ros_ws/src..." also works fine -->
-  <!-- <arg name="robot_model_path" default="/home/yang/ros_ws/src/swarm_robot_ros_sim/swarm_robot_description/urdf/two_wheel_robot.urdf"/> -->
-
   <!-- we resume the logic in empty_world.launch, changing the name of the world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find swarm_robot_description)/worlds/empty.world"/>
@@ -37,11 +27,8 @@
   <!-- all parameters under swarm_sim namespace -->
   <!-- robot_name decide which robot is used in the simulation -->
   <param name="/swarm_sim/robot_name" type="str" value="$(arg robot_name)"/>
-  <!-- <param name="robot_model_path" type="str" value="$(arg robot_model_path)"/> -->
   <!-- list all the robot model files here, use the one on robot_name parameter for swarm robot simulation -->
   <param name="/swarm_sim/two_wheel_robot_urdf" type="str" textfile="$(find swarm_robot_description)/urdf/two_wheel_robot.urdf"/>
-  <!-- spawn the enclosure in gazebo -->
-  <!-- <node name="enclosure" pkg="gazebo_ros" type="spawn_model" args="-file $(find swarm_robot_description)/urdf/enclosure_halfside_3.0.urdf -urdf -model enclosure_halfside_3.0"/> -->
 
 
 
