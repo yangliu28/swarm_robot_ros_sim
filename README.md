@@ -21,15 +21,15 @@ Have ROS Indigo installed and workspace setup. Clone this package at ~/ros_ws/sr
 ## Demo tests
 The two wheel robot dispersion test:
 
-&nbsp;&nbsp;`roslaunch swarm_robot_simulation two_wheel_robot_dispersion.launch robot_quantity:=20 half_range:=0.5`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`roslaunch swarm_robot_simulation two_wheel_robot_dispersion.launch robot_quantity:=20 half_range:=0.5`
 
-&nbsp;&nbsp;`rosrun swarm_robot_simulation two_wheel_robot_dispersion _spring_length:=0.7`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_simulation two_wheel_robot_dispersion _spring_length:=0.7`
 
-&nbsp;&nbsp;(optional)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(optional)
 
-&nbsp;&nbsp;`rosrun swarm_robot_description two_wheel_robot_batch_add _robot_quantity:=10 _half_range:=1.0`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_description two_wheel_robot_batch_add _robot_quantity:=10 _half_range:=1.0`
 
-&nbsp;&nbsp;`rosservice call /swarm_sim/two_wheel_robot_update ...`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosservice call /swarm_sim/two_wheel_robot_update ...`
 
 ## Why not ROS Stage
 
