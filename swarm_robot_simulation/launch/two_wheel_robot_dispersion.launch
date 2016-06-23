@@ -9,6 +9,7 @@
 
   <!-- the environment initialization -->
   <include file="$(find swarm_robot_description)/launch/initialize.launch">
+    <!-- override with this robot name, although it's default already -->
     <arg name="robot_name" value="two_wheel_robot" />
   </include>
 

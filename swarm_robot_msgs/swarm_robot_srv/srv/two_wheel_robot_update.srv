@@ -1,9 +1,13 @@
 # service message to add or delete two wheel robot model in gazebo
 
-# the functions:
-# add a robot at random position in defined range, or specified position
-# randomly delete a number of robots
-# delete all robots presented
+# service request how-to:
+# update_code >= CODE_ADD, add one robot
+    # add_mode == ADD_MODE_RANDOM, add this robot at random position
+        # specify the value of half_range
+    # add_mode == ADD_MODE_SPECIFIED, add this robot at specified position
+        # specify the value of position_2d
+# update_code == CODE_DELETE_ALL, delete all robots
+# update_code <= CODE_DELETE, delete robots a totoal number of abs(update_code)
 
 
 # request constants
