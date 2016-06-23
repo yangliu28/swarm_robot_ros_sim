@@ -19,17 +19,13 @@ This project starts after investigating several swarm robot platforms like Kilob
 Have ROS Indigo installed and workspace setup. Clone this package at ~/ros_ws/src and build with catkin_make.
 
 ## Demo tests
-launch the gazebo environment setting (parameter values are default):
-`roslaunch swarm_robot_description initialize.launch robot_name:=two_wheel_robot robot_quantity:=10 robot_range:=1.0`
+The two wheel robot dispersion test.
 
-launch the controllers for two wheel robot:
-`roslaunch swarm_robot_controller two_wheel_robot_controller.launch`
+`roslaunch swarm_robot_simulation two_wheel_robot_dispersion.launch robot_quantity:=20 half_range:=0.5`
 
-test 1: dispersion (parameter values are default):
-`rosrun swarm_robot_simulation two_wheel_dispersion _spring_length:=0.7 _wheel_speed:=2.0`
+`rosrun swarm_robot_simulation two_wheel_robot_dispersion _spring_length:=0.7`
 
-test 2: line formation (parameter values are default)
-`rosrun swarm_robot_simulation two_wheel_line_formation _sensing_range:=3.0 _spring_length:=0.7 _wheel_speed:=2.0`
+
 
 ## Why not ROS Stage
 
