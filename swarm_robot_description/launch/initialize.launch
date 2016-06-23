@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
+  <!-- this file is compatible with different robot models -->
+
   <!-- following are the arguments you can pass this launch file -->
   <!-- gazebo environment -->
   <arg name="paused" default="false"/>
@@ -41,16 +43,6 @@
   <!-- spawn the enclosure in gazebo -->
   <!-- <node name="enclosure" pkg="gazebo_ros" type="spawn_model" args="-file $(find swarm_robot_description)/urdf/enclosure_halfside_3.0.urdf -urdf -model enclosure_halfside_3.0"/> -->
 
-
-  <!-- the two wheel robot manager node -->
-  <node name="two_wheel_robot_manager" pkg="swarm_robot_description" type="two_wheel_robot_manager" ns="swarm_sim" output="screen" />
-
-  <!-- the two wheel robot batch adding node -->
-  <node name="two_wheel_robot_batch_add" pkg="swarm_robot_description" type="two_wheel_robot_batch_add" ns="swarm_sim" output="screen">
-    <param name="~robot_quantity" type="int" value="40" />
-    <param name="~half_range" type="double" value="0.5" />
-  </node>
-  <!-- use "_robot_quantity:=8" when passing parameters in command line -->
 
 
 </launch>

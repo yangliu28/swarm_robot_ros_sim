@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+  <!-- launch file specific for dispersion simulation of two wheel robot -->
+
+  <!-- parameters that can be overrided -->
+  <arg name="robot_quantity" default="20" />
+  <arg name="half_range" default="0.5" />
+
+  <!-- the environment initialization -->
+  <include file="$(find swarm_robot_description)/launch/initialize.launch">
+    <arg name="robot_name" value="two_wheel_robot" />
+  </include>
+
+  <!-- the two wheel robot manager node -->
+  <node name="two_wheel_robot_manager" pkg="swarm_robot_description" type="two_wheel_robot_manager" ns="swarm_sim" output="log" />
+
+  <!-- the two wheel robot batch adding node -->
+  <node name="two_wheel_robot_batch_add" pkg="swarm_robot_description" type="two_wheel_robot_batch_add" ns="swarm_sim" output="screen">
+    <param name="~robot_quantity" type="int" value="$(arg robot_quantity)" />
+    <param name="~half_range" type="double" value="$(arg half_range)" />
+  </node>
+
+
+</launch>
+

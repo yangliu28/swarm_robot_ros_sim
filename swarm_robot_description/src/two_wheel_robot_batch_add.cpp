@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
                         ROS_WARN("keep trying to add one robot");
                         minimal_delay.sleep();
                     }
-                    ROS_INFO("success after trials");
+                    ROS_INFO("success after retry");
                     break;
                 default:
                     // there is no reason to be here, otherwise there is problems in service request
