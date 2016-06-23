@@ -20,6 +20,13 @@ void twoWheelRobotCallback(const swarm_robot_msg::two_wheel_robot& input_msg) {
     current_robots = input_msg;  // update in global variables
 }
 
+// int to string converter
+std::string intToString(int a) {
+    std::stringstream ss;
+    ss << a;
+    return ss.str();
+}
+
 int main(int argc, char **argv) {
     ros::init(argc, argv, "two_wheel_robot_line_formation");
     ros::NodeHandle nh("~");
@@ -66,7 +73,10 @@ int main(int argc, char **argv) {
     set_joint_properties_srv_msg.request.ode_joint_config.fmax[0] = 1.0;
 
     // line formation loop
+    ros::Time timer_now;
+    ros::Time loop
     while (ros::ok()) {
 
     }
 }
+

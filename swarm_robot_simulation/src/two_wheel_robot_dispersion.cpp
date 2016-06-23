@@ -30,7 +30,8 @@ const double RIGHT_WHEEL_POSITION = 0.0157;  // right is positive direction
 // global variables
 swarm_robot_msg::two_wheel_robot current_robots;
 // time stamp for callback, used to check topic activity
-ros::Time two_wheel_robot_topic_timer;
+// initialize it with a negative time, so as to avoid mistaken for being active
+ros::Time two_wheel_robot_topic_timer(-TOPIC_ACTIVE_PERIOD-0.1);
 
 // callback for getting two wheel robot information
 void twoWheelRobotCallback(const swarm_robot_msg::two_wheel_robot& input_msg) {
@@ -100,11 +101,6 @@ int main(int argc, char **argv) {
     set_joint_properties_srv_msg.request.ode_joint_config.fmax.resize(1);  // in case of segmentation error
     set_joint_properties_srv_msg.request.ode_joint_config.vel.resize(1);
     set_joint_properties_srv_msg.request.ode_joint_config.fmax[0] = 1.0;
-
-    // initialize callback timer
-    two_wheel_robot_topic_timer = ros::Time::now();
-    // delay for a while to avoid false judgement of topic activity
-    ros::Duration(TOPIC_ACTIVE_PERIOD + 0.1).sleep();
 
     // dispersion control loop
     ros::Time timer_now;
