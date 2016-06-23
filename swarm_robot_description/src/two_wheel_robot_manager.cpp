@@ -311,8 +311,8 @@ bool twoWheelRobotUpdateCallback(swarm_robot_srv::two_wheel_robot_updateRequest&
             }
             else {
                 ROS_INFO_STREAM(new_model_name << " fail to be spawned");
-            response.response_code
-                = swarm_robot_srv::two_wheel_robot_updateResponse::FAIL_OTHER_REASONS;                
+                response.response_code
+                    = swarm_robot_srv::two_wheel_robot_updateResponse::FAIL_OTHER_REASONS;
             }
         }
         else {

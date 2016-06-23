@@ -14,7 +14,7 @@
   </include>
 
   <!-- the two wheel robot manager node -->
-  <node name="two_wheel_robot_manager" pkg="swarm_robot_description" type="two_wheel_robot_manager" ns="swarm_sim" output="log" />
+  <node name="two_wheel_robot_manager" pkg="swarm_robot_description" type="two_wheel_robot_manager" ns="swarm_sim" output="screen" />
 
   <!-- the two wheel robot batch adding node -->
   <node name="two_wheel_robot_batch_add" pkg="swarm_robot_description" type="two_wheel_robot_batch_add" ns="swarm_sim" output="screen">

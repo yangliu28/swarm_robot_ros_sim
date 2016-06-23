@@ -10,6 +10,7 @@
 #include <math.h>
 
 #include <iostream>  // debug
+#include <iomanip>
 
 // flow control parameters
 const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is active
@@ -19,7 +20,7 @@ double spring_length = 0.7;  // default spring length, may change from private p
 double upper_limit_ratio = 0.30;
 const int NEIGHBOR_NUM_L_LIMIT = 3;
 const int NEIGHBOR_NUM_H_LIMIT = 6;
-const double DISTANCE_FEEDBACK_RATIO = 0.382/2.0;
+const double DISTANCE_FEEDBACK_RATIO = 0.382;  // golden ratio
 const double VEL_RATIO = 10.0;  // the ratio of robot velocity relative to feedback vector
 const double STABLE_THRESHOLD = 0.02;  // temperarily not used
 const double LEFT_WHEEL_POSITION = -0.0157;
@@ -106,7 +107,9 @@ int main(int argc, char **argv) {
 
     // dispersion control loop
     ros::Time timer_now;
-    ros::Rate loop_rate(1/CONTROL_PERIOD);
+    ros::Time loop_last_timer = ros::Time::now();  // use to check loop rate
+    double loop_period_accumulator = 0.0;
+    ros::Rate loop_rate(1.0/CONTROL_PERIOD);  // use to control loop rate
     bool stop_all_robot_once = false;  // stop all robots for one time when topic is inactive
     while (ros::ok()) {
         int robot_quantity = current_robots.index.size();
@@ -116,6 +119,18 @@ int main(int argc, char **argv) {
         if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD) {
             // the topic is been actively published
             // ROS_WARN("topic is active");
+
+            // check loop rate
+            double real_loop_period =  (timer_now - loop_last_timer).toSec();
+            loop_last_timer = timer_now;  // update last timer
+            bool publish_debug_msg = false;
+            loop_period_accumulator = loop_period_accumulator + real_loop_period;
+            if (loop_period_accumulator > 1.0) {
+                // publish debug msg every 1 sec
+                std::cout << "loop rate when controller is on is " << 1.0/real_loop_period << std::endl;
+                loop_period_accumulator = 0.0;  // reset accumulator
+                publish_debug_msg = true;
+            }
 
             // set the stop_all_robot_once flag, prepare when topic out of active state
             stop_all_robot_once = true;
@@ -225,105 +240,91 @@ int main(int argc, char **argv) {
             // in a constant radius curve to the destination defined by the feedback vector            
             double wheel_vel[robot_quantity][2];  // vel of left and right wheels
             // relative angle between the feedback vector and the robot orientation
-            double relative_direction[robot_quantity];
-            double wheel_rotation_center[robot_quantity];
-            bool rotation_direction_ccw[robot_quantity];  // true is ccw, false is cw
+            double relative_direction;
+            double wheel_rotation_center;
             for (int i=0; i<robot_quantity; i++) {
-                relative_direction[i] = feedback_vector_direction[i] - current_robots.orientation[i];
+                relative_direction = feedback_vector_direction[i] - current_robots.orientation[i];
                 // both feedback vector direction and robot orientation are in range of [-M_PI, M_PI]
                 // the difference is in range of [-2*M_PI, 2*M_PI], will convert to [-M_PI, M_PI]
-                if (relative_direction[i] > M_PI)
-                    relative_direction[i] = relative_direction[i] - 2*M_PI;
-                if (relative_direction[i] < -M_PI)
-                    relative_direction[i] = relative_direction[i] + 2*M_PI;
+                if (relative_direction > M_PI)
+                    relative_direction = relative_direction - 2*M_PI;
+                if (relative_direction < -M_PI)
+                    relative_direction = relative_direction + 2*M_PI;
                 // now we have relative direction and length of feedback vector
                 // next step is converting them to wheel rotation center and rotation direction
                     // wheel rotation center is on the axis of two rotation wheels
                         // left side is negative, right side is positive
                     // rotation direction is either ccw or cw, relative to wheel rotation center
                 // divide relative direction into four quarters
-                if (relative_direction[i] > 0 && relative_direction[i] <= M_PI/2) {
-                    // going forward and rotate ccw
-                    wheel_rotation_center[i]
-                        = -feedback_vector_length[i]/2 / cos(M_PI/2 - relative_direction[i]);
-                    rotation_direction_ccw[i] = true;
-                }
-                else if (relative_direction[i] > M_PI/2 && relative_direction[i] < M_PI) {
-                    // going backward and rotate cw
-                    wheel_rotation_center[i]
-                        = -feedback_vector_length[i]/2 / cos(relative_direction[i] - M_PI/2);
-                    rotation_direction_ccw[i] = false;
-                }
-                else if (relative_direction[i] >=-M_PI/2 && relative_direction[i] < 0) {
-                    // going forward and rotate cw
-                    wheel_rotation_center[i]
-                        = feedback_vector_length[i]/2 / cos(relative_direction[i] + M_PI/2);
-                    rotation_direction_ccw[i] = false;
-                }
-                else if (relative_direction[i] > -M_PI && relative_direction[i] < -M_PI/2) {
-                    // going backward and rotate ccw
-                    wheel_rotation_center[i]
-                        = feedback_vector_length[i]/2 / cos(-M_PI/2 - relative_direction[i]);
-                    rotation_direction_ccw[i] = true;
-                }
-                else if (relative_direction[i] == 0){
-                    // very unlikely
-                    ROS_WARN("feedback vector relative direction is 0");
-                    wheel_rotation_center[i] = -100;  // a very large number
-                    rotation_direction_ccw[i] = true;
-                }
-                else if (relative_direction[i] == -M_PI || relative_direction[i] == M_PI) {
-                    // very unlikely
-                    ROS_WARN("feedback vector relative direction is -M_PI or M_PI");
-                    wheel_rotation_center[i] = -100;
-                    rotation_direction_ccw[i] = false;
-                }
-                // calculate wheel velocity here
-                if (wheel_rotation_center[i] <= 0 && rotation_direction_ccw[i] == true) {
-                    // rotation center at left side, and rotate ccw
+                if (relative_direction > 0 && relative_direction <= M_PI/2) {
+                    // going forward and rotate ccw, rotation center at left side
+                    wheel_rotation_center
+                        = -feedback_vector_length[i]/2 / cos(M_PI/2 - relative_direction);
                     // the velocity of the center of the robot: feedback_vector_length[i] * VEL_RATIO
-                    // left wheel
+                    // left wheel velocity
                     wheel_vel[i][0] = feedback_vector_length[i] * VEL_RATIO
-                        * (LEFT_WHEEL_POSITION - wheel_rotation_center[i]) / (0 - wheel_rotation_center[i]);
-                    // right wheel
+                        * (LEFT_WHEEL_POSITION - wheel_rotation_center) / (0 - wheel_rotation_center);
+                    // right wheel velocity
                     wheel_vel[i][1] = feedback_vector_length[i] * VEL_RATIO
-                        * (RIGHT_WHEEL_POSITION - wheel_rotation_center[i]) / (0 - wheel_rotation_center[i]);
+                        * (RIGHT_WHEEL_POSITION - wheel_rotation_center) / (0 - wheel_rotation_center);
                 }
-                else if (wheel_rotation_center[i] <= 0 && rotation_direction_ccw[i] == false) {
-                    // rotation center at left side, and rotate cw
-                    // left wheel
+                else if (relative_direction > M_PI/2 && relative_direction < M_PI) {
+                    // going backward and rotate cw, rotation center at left side
+                    wheel_rotation_center
+                        = -feedback_vector_length[i]/2 / cos(relative_direction - M_PI/2);
+                    // wheel velocities
                     wheel_vel[i][0] = -feedback_vector_length[i] * VEL_RATIO
-                        * (LEFT_WHEEL_POSITION - wheel_rotation_center[i]) / (0 - wheel_rotation_center[i]);
-                    // right wheel
+                        * (LEFT_WHEEL_POSITION - wheel_rotation_center) / (0 - wheel_rotation_center);
                     wheel_vel[i][1] = -feedback_vector_length[i] * VEL_RATIO
-                        * (RIGHT_WHEEL_POSITION - wheel_rotation_center[i]) / (0 - wheel_rotation_center[i]);
+                        * (RIGHT_WHEEL_POSITION - wheel_rotation_center) / (0 - wheel_rotation_center);
                 }
-                else if (wheel_rotation_center[i] > 0 && rotation_direction_ccw[i] == false) {
-                    // rotation center at right side, and rotate cw
-                    // left wheel
+                else if (relative_direction >=-M_PI/2 && relative_direction < 0) {
+                    // going forward and rotate cw, rotation center at right side
+                    wheel_rotation_center
+                        = feedback_vector_length[i]/2 / cos(relative_direction + M_PI/2);
+                    // wheel velocities
                     wheel_vel[i][0] = feedback_vector_length[i] * VEL_RATIO
-                        * (wheel_rotation_center[i] - LEFT_WHEEL_POSITION) / (wheel_rotation_center[i] - 0);
-                    // right wheel
+                        * (wheel_rotation_center - LEFT_WHEEL_POSITION) / (wheel_rotation_center - 0);
                     wheel_vel[i][1] = feedback_vector_length[i] * VEL_RATIO
-                        * (wheel_rotation_center[i] - RIGHT_WHEEL_POSITION) / (wheel_rotation_center[i] - 0);
+                        * (wheel_rotation_center - RIGHT_WHEEL_POSITION) / (wheel_rotation_center - 0);
                 }
-                else if (wheel_rotation_center[i] > 0 && rotation_direction_ccw[i] == true) {
-                    // rotation center at right side, and rotate ccw
-                    // left wheel
+                else if (relative_direction > -M_PI && relative_direction < -M_PI/2) {
+                    // going backward and rotate ccw, rotation center at right side
+                    wheel_rotation_center
+                        = feedback_vector_length[i]/2 / cos(-M_PI/2 - relative_direction);
+                    // wheel velocities
                     wheel_vel[i][0] = -feedback_vector_length[i] * VEL_RATIO
-                        * (wheel_rotation_center[i] - LEFT_WHEEL_POSITION) / (wheel_rotation_center[i] - 0);
-                    // right wheel
+                        * (wheel_rotation_center - LEFT_WHEEL_POSITION) / (wheel_rotation_center - 0);
                     wheel_vel[i][1] = -feedback_vector_length[i] * VEL_RATIO
-                        * (wheel_rotation_center[i] - RIGHT_WHEEL_POSITION) / (wheel_rotation_center[i] - 0);
+                        * (wheel_rotation_center - RIGHT_WHEEL_POSITION) / (wheel_rotation_center - 0);
+                }
+                else if (relative_direction == 0){
+                    // very unlikely here, just in case
+                    ROS_WARN("feedback vector relative direction is 0");
+                    wheel_rotation_center = -100;  // a very large number
+                    // wheel velocities
+                    wheel_vel[i][0] = feedback_vector_length[i] * VEL_RATIO;
+                    wheel_vel[i][1] = wheel_vel[i][0];
+                }
+                else if (relative_direction == -M_PI || relative_direction == M_PI) {
+                    // very unlikely here, just in case
+                    ROS_WARN("feedback vector relative direction is -M_PI or M_PI");
+                    wheel_rotation_center = -100;
+                    // wheel velocities
+                    wheel_vel[i][0] = feedback_vector_length[i] * VEL_RATIO;
+                    wheel_vel[i][1] = wheel_vel[i][0];
                 }
             }
 
             // print out the wheel vel data
-            // for (int i=0; i<robot_quantity; i++) {
-            //     std::cout << "robot index " << current_robots.index[i] << "\tleft vel\t"
-            //         << wheel_vel[i][0] << "\tright vel\t" << wheel_vel[i][1] << std::endl;
-            // }
-            // std::cout << std::endl;
+            if (publish_debug_msg) {
+                for (int i=0; i<robot_quantity; i++) {
+                    std::cout << std::setw(5) << current_robots.index[i]
+                        << std::setw(15) << wheel_vel[i][0]
+                        << std::setw(15) << wheel_vel[i][1] << std::endl;
+                }
+                std::cout << std::endl;
+            }
 
             // 6. send service request of wheel velocities
             bool call_service;
@@ -334,9 +335,10 @@ int main(int argc, char **argv) {
                 set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = wheel_vel[i][0];
                 call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
                 if (call_service) {
-                    if (!set_joint_properties_srv_msg.response.success)
+                    if (!set_joint_properties_srv_msg.response.success) {
                         // possibly the robot not found
                         ROS_WARN("the robot model not found when set left wheel vel");
+                    }
                 }
                 else
                     ROS_ERROR("fail to connect with gazebo server when set left wheel vel");
@@ -346,9 +348,10 @@ int main(int argc, char **argv) {
                 set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = wheel_vel[i][1];
                 call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
                 if (call_service) {
-                    if (!set_joint_properties_srv_msg.response.success)
+                    if (!set_joint_properties_srv_msg.response.success) {
                         // possibly the robot not found
                         ROS_WARN("the robot model not found when set right wheel vel");
+                    }
                 }
                 else
                     ROS_ERROR("fail to connect with gazebo server when set right wheel vel");
@@ -358,7 +361,7 @@ int main(int argc, char **argv) {
 
         }
         else {
-            // the topic is not active
+            // the topic is not active, meaning two wheel robot manager node is down
             // ROS_WARN("when topic is inactive");
 
             if (stop_all_robot_once) {
