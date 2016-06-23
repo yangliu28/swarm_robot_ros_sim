@@ -1,8 +1,9 @@
 // this node is the dispersion simulation of two wheel robots
 
-// ros communication:
-    // subscribe to topic "/swarm_sim/two_wheel_robot"
-    // service client to service "/gazebo/set_joint_properties"
+// this is the first simulation program written for two wheel robots
+
+// subscribe to topic "/swarm_sim/two_wheel_robot"
+// service client to service "/gazebo/set_joint_properties"
 
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
