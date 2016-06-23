@@ -9,7 +9,7 @@
 #include <gazebo_msgs/SetJointProperties.h>
 #include <math.h>
 
-#include <iostream>
+#include <iostream>  // debug
 
 // flow control parameters
 const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is active
@@ -20,7 +20,7 @@ double upper_limit_ratio = 0.30;
 const int NEIGHBOR_NUM_L_LIMIT = 3;
 const int NEIGHBOR_NUM_H_LIMIT = 6;
 const double DISTANCE_FEEDBACK_RATIO = 0.382/2.0;
-const double VEL_RATIO = 1.0;  // the ratio of robot velocity relative to feedback vector
+const double VEL_RATIO = 10.0;  // the ratio of robot velocity relative to feedback vector
 const double STABLE_THRESHOLD = 0.02;  // temperarily not used
 const double LEFT_WHEEL_POSITION = -0.0157;
 const double RIGHT_WHEEL_POSITION = 0.0157;  // right is positive direction
@@ -113,12 +113,10 @@ int main(int argc, char **argv) {
 
         // check if two wheel robot topic is active
         timer_now = ros::Time::now();
-
-        // ************************************
-        ROS_INFO_STREAM("period for topic activity: " << (timer_now - two_wheel_robot_topic_timer).toSec());
-
         if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD) {
             // the topic is been actively published
+            ROS_WARN("topic is active");
+
             // set the stop_all_robot_once flag, prepare when topic out of active state
             stop_all_robot_once = true;
 
@@ -138,9 +136,6 @@ int main(int argc, char **argv) {
                     }
                 }
             }
-
-            // ********************************
-            ROS_WARN("topic is active");
 
             // 2.sort the distance and record the index change
             double distance_sort[robot_quantity][robot_quantity];
@@ -172,9 +167,6 @@ int main(int argc, char **argv) {
                 }
             }
 
-            // ***********************************
-            ROS_INFO("6.program goes here");
-
             // 3.find all neighbors that will be used in force feedback control
             // find all the neighbors within the upper limit, choose closest 6 if exceed 6
             // if neighbors are sparse, override upper limit and choose cloest 3
@@ -203,16 +195,13 @@ int main(int argc, char **argv) {
                 }
             }
 
-            // ***********************************
-            ROS_INFO("7.program goes here");
-
             // 4.calculate feedback vector for each robot
             double feedback_vector[robot_quantity][2];  // vector in x and y for each robot
             double distance_diff;
             for (int i=0; i<robot_quantity; i++) {
                 feedback_vector[i][0] = 0.0;
                 feedback_vector[i][1] = 0.0;
-                for (int j=0; j<=neighbor_num[i]; j++) {
+                for (int j=1; j<=neighbor_num[i]; j++) {
                     distance_diff = distance_sort[i][j] - spring_length;
                     // feedback on x
                     feedback_vector[i][0] = feedback_vector[i][0] + DISTANCE_FEEDBACK_RATIO * distance_diff
@@ -230,9 +219,6 @@ int main(int argc, char **argv) {
                     = sqrt(pow(feedback_vector[i][0], 2) + pow(feedback_vector[i][1], 2));
                 feedback_vector_direction[i] = atan2(feedback_vector[i][1], feedback_vector[i][0]);
             }
-
-            // ***********************************
-            ROS_INFO("8.program goes here");
 
             // 5.calculate the wheel velocities
             // the wheel velocities are calculate so that the robot will move
@@ -333,13 +319,12 @@ int main(int argc, char **argv) {
             }
 
             // ***********************************
-            ROS_INFO("9.program goes here");
-
             // print out the wheel vel data
             for (int i=0; i<robot_quantity; i++) {
-                std::cout << "robot number " << current_robots.index[i] << ": left vel, "
-                    << wheel_vel[i][0] << ", right vel, " << wheel_vel[i][1];
+                std::cout << "robot index " << current_robots.index[i] << "\tleft vel\t"
+                    << wheel_vel[i][0] << "\tright vel\t" << wheel_vel[i][1] << std::endl;
             }
+            std::cout << std::endl;
 
             // 6. send service request of wheel velocities
             bool call_service;
@@ -349,10 +334,11 @@ int main(int argc, char **argv) {
                     = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::left_motor";
                 set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = wheel_vel[i][0];
                 call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
-                if (call_service)
+                if (call_service) {
                     if (!set_joint_properties_srv_msg.response.success)
                         // possibly the robot not found
                         ROS_WARN("the robot model not found when set left wheel vel");
+                }
                 else
                     ROS_ERROR("fail to connect with gazebo server when set left wheel vel");
                 // right wheel
@@ -360,19 +346,20 @@ int main(int argc, char **argv) {
                     = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::right_motor";
                 set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = wheel_vel[i][1];
                 call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
-                if (call_service)
+                if (call_service) {
                     if (!set_joint_properties_srv_msg.response.success)
                         // possibly the robot not found
                         ROS_WARN("the robot model not found when set right wheel vel");
+                }
                 else
                     ROS_ERROR("fail to connect with gazebo server when set right wheel vel");
             }
 
+            // break;  // debug purpose
+
         }
         else {
             // the topic is not active
-
-            // ********************************
             ROS_WARN("when topic is inactive");
 
             if (stop_all_robot_once) {
@@ -384,10 +371,11 @@ int main(int argc, char **argv) {
                         = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::left_motor";
                     set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = 0.0;
                     call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
-                    if (call_service)
+                    if (call_service) {
                         if (!set_joint_properties_srv_msg.response.success)
                             // possibly the robot not found
                             ROS_WARN("the robot model not found when reset left wheel vel");
+                    }
                     else
                         ROS_ERROR("fail to connect with gazebo server when reset left wheel vel");
                     // right wheel
@@ -395,10 +383,11 @@ int main(int argc, char **argv) {
                         = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::right_motor";
                     set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = 0.0;
                     call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
-                    if (call_service)
+                    if (call_service) {
                         if (!set_joint_properties_srv_msg.response.success)
                             // possibly the robot not found
                             ROS_WARN("the robot model not found when reset right wheel vel");
+                    }
                     else
                         ROS_ERROR("fail to connect with gazebo server when reset right wheel vel");
                 }
@@ -406,8 +395,6 @@ int main(int argc, char **argv) {
                 stop_all_robot_once = false;
             }
         }
-
-        break;  // debug purpose
 
         loop_rate.sleep();
         ros::spinOnce();  // let the global variables update
