@@ -1,14 +1,17 @@
 # swarm_robot_ros_sim
 A swarm robot simulation environment for ROS to be used with Gazebo.
 
+## Motivation
+This project starts after investigating several swarm robot platforms like Kilobot, E-puck, Jasmine, Alice, etc, and working on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while. It would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. This project is also for the purpose of learning programming and various tools in ROS.
+
 ## What's inside
-*swarm_robot_ros_sim* contains packages each of which features a set of functionalities of this simulation:
+*swarm_robot_ros_sim* contains packages each of which features a set of functionalities for this simulation platform:
 
 *swarm_robot_description* package describes the robot models and simulation environment initialization files.
 
 *swarm_robot_msgs* folder contains packages for customized messages, services and actions that will be used in other packages.
 
-*swarm_robot_controller* package contains the low level control of swarm robots.
+*swarm_robot_controller* package contains the low level controllers for the swarm robots.
 
 *swarm_robot_simulation* package contains the swarm algorithms.
 
@@ -29,9 +32,6 @@ test 2: line formation (parameter values are default)
 `rosrun swarm_robot_simulation two_wheel_line_formation _sensing_range:=3.0 _spring_length:=0.7 _wheel_speed:=2.0`
 
 ## Why not ROS Stage
-
-## Motivation
-This project starts after investigating several swarm robot platforms like Kilobot, E-puck, Jasmine, Alice, etc, and work on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while, it would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. This project is also for the purpose of learning programming and various tools in ROS.
 
 ## Contribution
 
