@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
         timer_now = ros::Time::now();
         if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD) {
             // the topic is been actively published
-            ROS_WARN("topic is active");
+            // ROS_WARN("topic is active");
 
             // set the stop_all_robot_once flag, prepare when topic out of active state
             stop_all_robot_once = true;
@@ -318,13 +318,12 @@ int main(int argc, char **argv) {
                 }
             }
 
-            // ***********************************
             // print out the wheel vel data
-            for (int i=0; i<robot_quantity; i++) {
-                std::cout << "robot index " << current_robots.index[i] << "\tleft vel\t"
-                    << wheel_vel[i][0] << "\tright vel\t" << wheel_vel[i][1] << std::endl;
-            }
-            std::cout << std::endl;
+            // for (int i=0; i<robot_quantity; i++) {
+            //     std::cout << "robot index " << current_robots.index[i] << "\tleft vel\t"
+            //         << wheel_vel[i][0] << "\tright vel\t" << wheel_vel[i][1] << std::endl;
+            // }
+            // std::cout << std::endl;
 
             // 6. send service request of wheel velocities
             bool call_service;
@@ -360,7 +359,7 @@ int main(int argc, char **argv) {
         }
         else {
             // the topic is not active
-            ROS_WARN("when topic is inactive");
+            // ROS_WARN("when topic is inactive");
 
             if (stop_all_robot_once) {
                 // set wheel velocity of all robots to zero according to last topic update

@@ -406,7 +406,7 @@ int main(int argc, char **argv) {
                 if (call_service) {
                     if (!joint_properties_srv_msg.response.success) {
                         // joint not found, there is possible robot deletion the container doesn't realize
-                        ROS_ERROR("there is possible robot deletion not updated");
+                        ROS_WARN("there is possible robot deletion not updated");
                     }
                     else {
                         // update the left wheel velocity
@@ -425,7 +425,7 @@ int main(int argc, char **argv) {
                 if (call_service) {
                     if (!joint_properties_srv_msg.response.success) {
                         // joint not found, there is possible robot deletion the container doesn't realize
-                        ROS_ERROR("there is possible robot deletion not updated");
+                        ROS_WARN("there is possible robot deletion not updated");
                     }
                     else {
                         // update the right wheel velocity
