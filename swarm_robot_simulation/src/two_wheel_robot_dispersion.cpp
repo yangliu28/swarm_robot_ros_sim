@@ -21,8 +21,8 @@ double spring_length = 0.7;  // default spring length, may change from private p
 double upper_limit_ratio = 0.30;
 const int NEIGHBOR_NUM_L_LIMIT = 3;
 const int NEIGHBOR_NUM_H_LIMIT = 6;
-const double DISTANCE_FEEDBACK_RATIO = 0.382;  // golden ratio
-const double VEL_RATIO = 10.0;  // the ratio of robot velocity relative to feedback vector
+const double DISTANCE_FEEDBACK_RATIO = 1.0;  // no scale
+const double VEL_RATIO = 5.0;  // the ratio of robot velocity relative to feedback vector
 const double STABLE_THRESHOLD = 0.02;  // temperarily not used
 const double LEFT_WHEEL_POSITION = -0.0157;
 const double RIGHT_WHEEL_POSITION = 0.0157;  // right is positive direction
@@ -104,8 +104,9 @@ int main(int argc, char **argv) {
 
     // dispersion control loop
     ros::Time timer_now;
-    ros::Time loop_last_timer = ros::Time::now();  // use to check loop rate
-    double loop_period_accumulator = 0.0;
+    ros::Time loop_last_timer = ros::Time::now();  // use to examine loop rate
+    double loops_sum_period;
+    int loop_count = 0;
     ros::Rate loop_rate(1.0/CONTROL_PERIOD);  // use to control loop rate
     bool stop_all_robot_once = false;  // stop all robots for one time when topic is inactive
     while (ros::ok()) {
@@ -117,16 +118,21 @@ int main(int argc, char **argv) {
             // the topic is been actively published
             // ROS_WARN("topic is active");
 
-            // check loop rate
-            double real_loop_period =  (timer_now - loop_last_timer).toSec();
-            loop_last_timer = timer_now;  // update last timer
-            bool publish_debug_msg = false;
-            loop_period_accumulator = loop_period_accumulator + real_loop_period;
-            if (loop_period_accumulator > 1.0) {
-                // publish debug msg every 1 sec
-                std::cout << "loop rate when controller is on is " << 1.0/real_loop_period << std::endl;
-                loop_period_accumulator = 0.0;  // reset accumulator
-                publish_debug_msg = true;
+            // examine loop rate
+            bool print_debug_msg = false;  // whether to print debug msg elsewhere
+            loop_count = loop_count + 1;
+            if (loop_count >= 10) {
+                // at least 10 counts when averaging frequency
+                loops_sum_period = (timer_now - loop_last_timer).toSec();
+                if (loops_sum_period > 1.0) {
+                    // interval should also be bigger than 1.0 sec
+                    // average the frequency on past loops
+                    std::cout << "loop rate when controller is on is "
+                        << ((double)loop_count)/loops_sum_period << std::endl;
+                    loop_count = 0;  // reset loop count
+                    loop_last_timer = timer_now;  // update last timer
+                    print_debug_msg = true;
+                }
             }
 
             // set the stop_all_robot_once flag, prepare when topic out of active state
@@ -159,7 +165,7 @@ int main(int argc, char **argv) {
                     index_sort[i][j] = j;
                 }
             }
-            // start sorting, bubble sort method
+            // start sorting, bubble sort method, full sorting of all distances
             double distance_temp;
             int index_temp;
             for (int i=0; i<robot_quantity; i++) {
@@ -314,7 +320,7 @@ int main(int argc, char **argv) {
             }
 
             // print out the wheel vel data
-            if (publish_debug_msg) {
+            if (print_debug_msg) {
                 for (int i=0; i<robot_quantity; i++) {
                     std::cout << std::setw(5) << current_robots.index[i]
                         << std::setw(15) << wheel_vel[i][0]
