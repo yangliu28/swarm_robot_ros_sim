@@ -18,7 +18,7 @@ const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is acti
 const double CONTROL_PERIOD = 0.001;
 // simulation control parameters
 double spring_length = 0.7;  // default spring length, may change from private parameter
-double upper_limit_ratio = 0.30;
+double spring_upper_limit_ratio = 0.30;
 double sensing_range = 3.0;
 const int NEIGHBOR_NUM_L_LIMIT = 3;
 const int NEIGHBOR_NUM_H_LIMIT = 6;
@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
     ROS_INFO("gazebo service set_joint_properties is ready");
 
     // get settings for this simulation from private parameter
+    // get spring length
     bool get_spring_length = nh.getParam("spring_length", spring_length);
     if (get_spring_length) {
         ROS_INFO_STREAM("using spring length passed in: " << spring_length);
@@ -88,7 +89,16 @@ int main(int argc, char **argv) {
     else
         ROS_INFO_STREAM("using default spring length: 0.7");
     // calculate other parameter depending on spring length
-    double upper_limit = spring_length * (1 + upper_limit_ratio);
+    double spring_upper_limit = spring_length * (1 + spring_upper_limit_ratio);
+    // get sensing range
+    bool get_sensing_range = nh.getParam("sensing_range", sensing_range);
+    if (get_sensing_range) {
+        ROS_INFO_STREAM("using sensing range passed in: " << sensing_range);
+        // delete parameter
+        nh.deleteParam("sensing_range");
+    }
+    else
+        ROS_INFO_STREAM("using default sensing range: 3.0");
 
     // instantiate a subscriber to topic "/swarm_sim/two_wheel_robot"
     ros::Subscriber two_wheel_robot_subscriber
@@ -236,36 +246,67 @@ int main(int argc, char **argv) {
             }
 
             // 3.find all neighbors that will be used in force feedback control
-            // find all the neighbors within the upper limit, choose closest 6 if more than 6 are in
-            // if neighbors are sparse, override upper limit and choose cloest 3
-            // i.e., there are 3 ~ 6 neighbors for each robot
+            // rules are:
+            // in the closest (NEIGHBOR_NUM_H_LIMIT) neighbors, find all that are in spring upper limit
+            // if robots are fewer than (NEIGHBOR_NUM_H_LIMIT), add to (NEIGHBOR_NUM_H_LIMIT)
+            // if robots are even fewer than (NEIGHBOR_NUM_H_LIMIT), then all are neighbors
+            // then check if all distance are satisfied with sensing range
+                // naturally, sensing_range should be at least 2~3 times larger then spring length
             int neighbor_num[robot_quantity];  // the number of vallid neighbors
             // no need to record index
             // they are the first neighbor_num robots in the sorted index list
             for (int i=0; i<robot_quantity; i++) {
-                // compare robot quantity with neighbor number limits
+                neighbor_num[i] = 0;  // initialize with 0
+                // compare robot quantity with neighbor number lower limit
                 if ((robot_quantity - 1) <= NEIGHBOR_NUM_L_LIMIT) {
-                    // (robot_quantity - 1) is the largest neighbor number for each robot
-                    // set neighbor number to the largest possible
-                    neighbor_num[i] = robot_quantity - 1;
-                }
-                else {
-                    neighbor_num[i] = NEIGHBOR_NUM_L_LIMIT;  // initialize with lower limit
-                    for (int j=NEIGHBOR_NUM_L_LIMIT+1; j<robot_quantity; j++) {
-                        // (NEIGHBOR_NUM_L_LIMIT+1) is the index in the distance_sort
-                        // of the first robot except itself and the neighbors
-                        if (distance_sort[i][j] <= upper_limit) {
+                    // (robot_quantity - 1) is the largest number of neighbors for each robot
+                    for (int j=1; j<robot_quantity; j++) {
+                        if (distance_sort[i][j] < sensing_range) {
                             neighbor_num[i] = neighbor_num[i] + 1;
-                            if (neighbor_num[i] == NEIGHBOR_NUM_H_LIMIT)
-                                break;
                         }
                         else {
-                            // also break because later distances will only be larger
+                            break;
+                        }
+                    }
+                }
+                else {
+                    for (int j=1; j<robot_quantity; j++) {
+                        if (neighbor_num[i] < NEIGHBOR_NUM_L_LIMIT) {
+                            // only check sensing range, not spring length
+                            if (distance_sort[i][j] <= sensing_range) {
+                                neighbor_num[i] = neighbor_num[i] + 1;
+                            }
+                            else {
+                                break;
+                            }
+                        }
+                        else if (neighbor_num[i] >= NEIGHBOR_NUM_L_LIMIT
+                            && neighbor_num[i] < NEIGHBOR_NUM_H_LIMIT) {
+                            // check both sensing range and spring length
+                            if (distance_sort[i][j] < sensing_range 
+                                && distance_sort[i][j] < spring_upper_limit) {
+                                neighbor_num[i] = neighbor_num[i] + 1;
+                            }
+                            else {
+                                break;
+                            }
+                        }
+                        else {
+                            // neighbor num has reached full, NEIGHBOR_NUM_H_LIMIT
                             break;
                         }
                     }
                 }
             }
+
+            // print out neighbor numbers
+            // if (print_debug_msg) {
+            //     for (int i=0; i<robot_quantity; i++) {
+            //         std::cout << std::setw(5) << current_robots.index[i]
+            //             << std::setw(15) << neighbor_num[i] << std::endl;
+            //     }
+            //     std::cout << std::endl;
+            // }
 
             // 4.calculate feedback vector for each robot
             double feedback_vector[robot_quantity][2];  // vector in x and y for each robot
@@ -373,15 +414,15 @@ int main(int argc, char **argv) {
                 }
             }
 
-            // print out the wheel vel data
-            if (print_debug_msg) {
-                for (int i=0; i<robot_quantity; i++) {
-                    std::cout << std::setw(5) << current_robots.index[i]
-                        << std::setw(15) << wheel_vel[i][0]
-                        << std::setw(15) << wheel_vel[i][1] << std::endl;
-                }
-                std::cout << std::endl;
-            }
+            // print out the wheel velocities
+            // if (print_debug_msg) {
+            //     for (int i=0; i<robot_quantity; i++) {
+            //         std::cout << std::setw(5) << current_robots.index[i]
+            //             << std::setw(15) << wheel_vel[i][0]
+            //             << std::setw(15) << wheel_vel[i][1] << std::endl;
+            //     }
+            //     std::cout << std::endl;
+            // }
 
             // 6. send service request of wheel velocities
             bool call_service;
