@@ -7,10 +7,16 @@
 #include <swarm_robot_msg/two_wheel_robot.h>
 #include <gazebo_msgs/SetJointProperties.h>
 #include <math.h>
+#include <algorithm>
+#include <numeric>
+#include <vector>
 
 // flow control parameters
 const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is active
 const double CONTROL_PERIOD = 0.001;
+// simulation control parameters
+double spring_length = 0.7;
+double sensing_range = 3.0;
 
 // global variables
 swarm_robot_msg::two_wheel_robot current_robots;
@@ -29,6 +35,23 @@ std::string intToString(int a) {
     std::stringstream ss;
     ss << a;
     return ss.str();
+}
+
+// linear fitting function, revised from C++11 implementation
+// linear fitting here using y=kx+b form, which means vertical line is not supported
+// but it's very unlikely to happen with double precision data, we'll see
+std::vector<double> linear_fitting(const std::vector<double>& x, const std::vector<double>& y) {
+    const double n = x.size();
+    const double s_x = std::accumulate(x.begin(), x.end(), 0.0);
+    const double s_y = std::accumulate(y.begin(), y.end(), 0.0);
+    const double s_xx = std::inner_product(x.begin(), x.end(), x.begin(), 0.0);
+    const double s_xy = std::inner_product(x.begin(), x.end(), y.begin(), 0.0);
+    const double slope = (n * s_xy - s_x * s_y) / (n * s_xx - s_x * s_x);
+    const double intercept = (s_y - slope * s_x) / n;
+    std::vector<double> a;
+    a.push_back(slope);
+    a.push_back(intercept);
+    return a;
 }
 
 int main(int argc, char **argv) {
@@ -62,6 +85,26 @@ int main(int argc, char **argv) {
     ROS_INFO("gazebo service set_joint_properties is ready");
 
     // get the settings for this simulation from private parameter
+    // get spring length
+    bool get_spring_length = nh.getParam("spring_length", spring_length);
+    if (get_spring_length) {
+        ROS_INFO_STREAM("using spring length passed in: " << spring_length);
+        // delete parameter
+        nh.deleteParam("spring_length");
+    }
+    else
+        ROS_INFO_STREAM("using default spring length: 0.7");
+    // calculate other parameter depending on spring length
+    double spring_upper_limit = spring_length * (1 + spring_upper_limit_ratio);
+    // get sensing range
+    bool get_sensing_range = nh.getParam("sensing_range", sensing_range);
+    if (get_sensing_range) {
+        ROS_INFO_STREAM("using sensing range passed in: " << sensing_range);
+        // delete parameter
+        nh.deleteParam("sensing_range");
+    }
+    else
+        ROS_INFO_STREAM("using default sensing range: 3.0");
 
     // instantiate a subscriber to topic "/swarm_sim/two_wheel_robot"
     ros::Subscriber two_wheel_robot_subscriber
@@ -159,13 +202,64 @@ int main(int argc, char **argv) {
                 }
             }
 
+            // 3.find all neighbors in sensing range
+            int neighbor_num_in_range[robot_quantity];
+            for (int i=0; i<robot_quantity; i++) {
+                neighbor_num_in_range[i] = 0;
+                for (int j=1; j<robot_quantity; j++) {
+                    if (distance_sort[i][j] < sensing_range) {
+                        neighbor_num_in_range[i] = neighbor_num_in_range[i] + 1;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
 
+            // 4.calculate the fitted line for the in range neighbors, including itself
+            std::vector<double> fit_temp;
+            double fitting_result[robot_quantity][2];  // store the fitting result
+            std::vector<double> fit_x;
+            std::vector<double> fit_y;
+            for (int i=0; i<robot_quantity; i++) {
+                fit_x.resize(neighbor_num_in_range[i]+1);  // neighbors plus itself
+                fit_y.resize(neighbor_num_in_range[i]+1);
+                for (int j=0; j<neighbor_num_in_range[i]+1; j++) {
+                    fit_x[j] = current_robots.x[index_sort[i][j]];
+                    fit_y[j] = current_robots.y[index_sort[i][j]];
+                }
+                fit_temp = linear_fitting(fit_x, fit_y);
+                fitting_result[i][0] = fit_temp[0];  // the slope
+                fitting_result[i][1] = fit_temp[1];  // the intercept
+            }
 
+            // 5.calculate perpendicular feedback vector
+            // vector starts from robot position to the perpendicular pedal on the fitted line
+            double perpendicular_feedback_vector[robot_quantity][2];  // in x and y directions
+            double distance_diff;
+            for (int i=0; i<robot_quantity; i++) {
+                // slope intercept form, k and b are known parameters
+                // the perpendicular vector is -k/(1+k^2)*(kx+b-y), 1/(1+k^2)*(kx+b-y)
+                // with x and y being robot position
+                perpendicular_feedback_vector[i][0] = -fitting_result[i][0]
+                    / (1 + pow(fitting_result[i][0],2)) * (fitting_result[i][0]*current_robots.x[i]
+                    + fitting_result[i][1] - current_robots.y[i]);
+                perpendicular_feedback_vector[i][1] = 1
+                    / (1 + pow(fitting_result[i][0],2)) * (fitting_result[i][0]*current_robots.x[i]
+                    + fitting_result[i][1] - current_robots.y[i]);
+            }
 
+            // 6.find adjacent neighbors for distance feedback in parallel direction
+            // the rules are:
+            // only two neighbors are needed for distance feedback, one on left, one on right
+            // left and right are tell by facing the fitted line from the robot position
+            // the chosen robots have smallest projected distance (on the line) at both sides
+            // if no robots are on left or right, then leave it empty
+            for (int i=0; i<robot_quantity; i++) {
+                //
+            }
 
-
-
-
+            // 7.calculate parallel feedback vector
 
 
 
