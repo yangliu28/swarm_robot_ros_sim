@@ -16,7 +16,7 @@ This project starts after investigating several swarm robot platforms like Kilob
 *swarm_robot_simulation* package contains the swarm algorithms.
 
 ## Setup
-Have ROS Indigo installed and workspace setup. Clone this package at ~/ros_ws/src and build with catkin_make.
+Have ROS Indigo installed and workspace setup. Clone this package in ~/ros_ws/src and build with catkin_make.
 
 ## Demo tests
 The two wheel robot dispersion test:
@@ -29,7 +29,7 @@ The two wheel robot dispersion test:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_description two_wheel_robot_batch_add _robot_quantity:=10 _half_range:=1.0`
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosservice call /swarm_sim/two_wheel_robot_update ...`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosservice call /swarm_sim/two_wheel_robot_update (press tab)...`
 
 ## Why not ROS Stage
 

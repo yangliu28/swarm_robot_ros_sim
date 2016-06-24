@@ -129,6 +129,45 @@ int main(int argc, char **argv) {
                 }
             }
 
+            // 2.sort the distance and record the index change
+            double distance_sort[robot_quantity][robot_quantity];
+            int index_sort[robot_quantity][robot_quantity];
+            // initialize distance_sort and index_sort
+            for (int i=0; i<robot_quantity; i++) {
+                for (int j=0; j<robot_quantity; j++) {
+                    distance_sort[i][j] = distance[i][j];
+                    index_sort[i][j] = j;
+                }
+            }
+            // full sorting, bubble sorting method
+            for (int i=0; i<robot_quantity; i++) {
+                for (int j=0; j<robot_quantity-1; j++) {
+                    // j control the loops of bubble sorting
+                    for (int k=0; k<robot_quantity-1-j; k++) {
+                        // bubble from back to front to pop up the smaller ones
+                        if (distance_sort[i][k] > distance_sort[i][k+1]) {
+                            // switch between these two distances
+                            distance_temp = distance_sort[i][k];
+                            distance_sort[i][k] = distance_sort[i][k+1];
+                            distance_sort[i][k+1] = distance_temp;
+                            // also switch corresponding indices
+                            index_temp = index_sort[i][k];
+                            index_sort[i][k] = index_sort[i][k+1];
+                            index_sort[i][k+1] = index_temp;
+                        }
+                    }
+                }
+            }
+
+
+
+
+
+
+
+
+
+
 
 
 

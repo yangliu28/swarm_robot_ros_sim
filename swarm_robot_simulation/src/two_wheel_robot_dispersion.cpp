@@ -177,7 +177,9 @@ int main(int argc, char **argv) {
                 }
             }
             // partial sorting of only the necessary smallest distances
-                // 1(self)+NEIGHBOR_NUM_H_LIMIT(neighbors)
+                // necessary distances: 1(itself)+NEIGHBOR_NUM_H_LIMIT(neighbors)
+                // partial sorting is only possible in this simulation because a upper limit
+                // in neighbor number is exerted
             // performance (control frequency) improves a little with partial sorting
             double distance_temp;
             int index_temp;
