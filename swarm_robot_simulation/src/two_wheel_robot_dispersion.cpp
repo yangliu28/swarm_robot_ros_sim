@@ -19,6 +19,7 @@ const double CONTROL_PERIOD = 0.001;
 // simulation control parameters
 double spring_length = 0.7;  // default spring length, may change from private parameter
 double upper_limit_ratio = 0.30;
+double sensing_range = 3.0;
 const int NEIGHBOR_NUM_L_LIMIT = 3;
 const int NEIGHBOR_NUM_H_LIMIT = 6;
 const double DISTANCE_FEEDBACK_RATIO = 1.0;  // no scale
@@ -165,33 +166,82 @@ int main(int argc, char **argv) {
                     index_sort[i][j] = j;
                 }
             }
-            // start sorting, bubble sort method, full sorting of all distances
+            // full sorting of all distances, bubble sort method
+            // forward sorting from front to back
+            // double distance_temp;
+            // int index_temp;
+            // for (int i=0; i<robot_quantity; i++) {
+            //     for (int j=0; j<robot_quantity-1; j++) {
+            //         for (int k=0; k<robot_quantity-1-j; k++) {
+            //             if (distance_sort[i][k] > distance_sort[i][k+1]) {
+            //                 // switch between these two distances
+            //                 distance_temp = distance_sort[i][k];
+            //                 distance_sort[i][k] = distance_sort[i][k+1];
+            //                 distance_sort[i][k+1] = distance_temp;
+            //                 // also switch corresponding indices
+            //                 index_temp = index_sort[i][k];
+            //                 index_sort[i][k] = index_sort[i][k+1];
+            //                 index_sort[i][k+1] = index_temp;
+            //             }
+            //         }
+            //     }
+            // }
+            // partial sorting of only the necessary smallest distances
+                // 1(self)+NEIGHBOR_NUM_H_LIMIT(neighbors)
+            // performance (control frequency) improves a little with partial sorting
             double distance_temp;
             int index_temp;
-            for (int i=0; i<robot_quantity; i++) {
-                for (int j=0; j<robot_quantity-1; j++) {
-                    for (int k=0; k<robot_quantity-1-j; k++) {
-                        if (distance_sort[i][k] > distance_sort[i][k+1]) {
-                            // switch between these two distances
-                            distance_temp = distance_sort[i][k];
-                            distance_sort[i][k] = distance_sort[i][k+1];
-                            distance_sort[i][k+1] = distance_temp;
-                            // also switch corresponding indices
-                            index_temp = index_sort[i][k];
-                            index_sort[i][k] = index_sort[i][k+1];
-                            index_sort[i][k+1] = index_temp;
+            // in case there are too few robots
+            if (robot_quantity - 1 > NEIGHBOR_NUM_H_LIMIT) {
+                // pop up the NEIGHBOR_NUM_H_LIMIT+1 number of robots
+                for (int i=0; i<robot_quantity; i++) {
+                    for (int j=0; j<NEIGHBOR_NUM_H_LIMIT+1; j++) {  // difference is here
+                        // j control the loops of bubble sorting
+                        for (int k=robot_quantity-1; k>j; k--) {
+                            // bubble from back to front to pop up the smaller ones
+                            if (distance_sort[i][k] < distance_sort[i][k-1]) {
+                                // switch between these two distances
+                                distance_temp = distance_sort[i][k];
+                                distance_sort[i][k] = distance_sort[i][k-1];
+                                distance_sort[i][k-1] = distance_temp;
+                                // also switch corresponding indices
+                                index_temp = index_sort[i][k];
+                                index_sort[i][k] = index_sort[i][k-1];
+                                index_sort[i][k-1] = index_temp;
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                // too few robots, full sorting
+                for (int i=0; i<robot_quantity; i++) {
+                    for (int j=0; j<robot_quantity-1; j++) {
+                        // j control the loops of bubble sorting
+                        for (int k=robot_quantity-1; k>j; k--) {
+                            // bubble from back to front to pop up the smaller ones
+                            if (distance_sort[i][k] < distance_sort[i][k-1]) {
+                                // switch between these two distances
+                                distance_temp = distance_sort[i][k];
+                                distance_sort[i][k] = distance_sort[i][k-1];
+                                distance_sort[i][k-1] = distance_temp;
+                                // also switch corresponding indices
+                                index_temp = index_sort[i][k];
+                                index_sort[i][k] = index_sort[i][k-1];
+                                index_sort[i][k-1] = index_temp;
+                            }
                         }
                     }
                 }
             }
 
             // 3.find all neighbors that will be used in force feedback control
-            // find all the neighbors within the upper limit, choose closest 6 if exceed 6
+            // find all the neighbors within the upper limit, choose closest 6 if more than 6 are in
             // if neighbors are sparse, override upper limit and choose cloest 3
             // i.e., there are 3 ~ 6 neighbors for each robot
             int neighbor_num[robot_quantity];  // the number of vallid neighbors
             // no need to record index
-            // they are the first neighbor_num robots in the sorted list
+            // they are the first neighbor_num robots in the sorted index list
             for (int i=0; i<robot_quantity; i++) {
                 // compare robot quantity with neighbor number limits
                 if ((robot_quantity - 1) <= NEIGHBOR_NUM_L_LIMIT) {
@@ -204,10 +254,14 @@ int main(int argc, char **argv) {
                     for (int j=NEIGHBOR_NUM_L_LIMIT+1; j<robot_quantity; j++) {
                         // (NEIGHBOR_NUM_L_LIMIT+1) is the index in the distance_sort
                         // of the first robot except itself and the neighbors
-                        if (distance_sort[i][j] < upper_limit) {
+                        if (distance_sort[i][j] <= upper_limit) {
                             neighbor_num[i] = neighbor_num[i] + 1;
                             if (neighbor_num[i] == NEIGHBOR_NUM_H_LIMIT)
                                 break;
+                        }
+                        else {
+                            // also break because later distances will only be larger
+                            break;
                         }
                     }
                 }
