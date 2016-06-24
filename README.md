@@ -23,7 +23,7 @@ The two wheel robot dispersion test:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`roslaunch swarm_robot_simulation two_wheel_robot_dispersion.launch robot_quantity:=20 half_range:=0.5`
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_simulation two_wheel_robot_dispersion _spring_length:=0.7`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_simulation two_wheel_robot_dispersion _spring_length:=0.7 _sensing_range:=2.5`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(optional)
 
