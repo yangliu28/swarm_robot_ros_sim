@@ -176,26 +176,6 @@ int main(int argc, char **argv) {
                     index_sort[i][j] = j;
                 }
             }
-            // full sorting of all distances, bubble sort method
-            // forward sorting from front to back
-            // double distance_temp;
-            // int index_temp;
-            // for (int i=0; i<robot_quantity; i++) {
-            //     for (int j=0; j<robot_quantity-1; j++) {
-            //         for (int k=0; k<robot_quantity-1-j; k++) {
-            //             if (distance_sort[i][k] > distance_sort[i][k+1]) {
-            //                 // switch between these two distances
-            //                 distance_temp = distance_sort[i][k];
-            //                 distance_sort[i][k] = distance_sort[i][k+1];
-            //                 distance_sort[i][k+1] = distance_temp;
-            //                 // also switch corresponding indices
-            //                 index_temp = index_sort[i][k];
-            //                 index_sort[i][k] = index_sort[i][k+1];
-            //                 index_sort[i][k+1] = index_temp;
-            //             }
-            //         }
-            //     }
-            // }
             // partial sorting of only the necessary smallest distances
                 // 1(self)+NEIGHBOR_NUM_H_LIMIT(neighbors)
             // performance (control frequency) improves a little with partial sorting
