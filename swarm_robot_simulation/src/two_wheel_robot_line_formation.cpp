@@ -17,6 +17,9 @@ const double CONTROL_PERIOD = 0.001;
 // simulation control parameters
 double spring_length = 0.7;
 double sensing_range = 3.0;
+const double PERPENDICULAR_PERCENTAGE = 0.4;  // used in the fusion of two feedback
+const double PARALLEL_PERCENTAGE = 1 - PERPENDICULAR_PERCENTAGE;
+const double VEL_RATIO = 1.0;  // the ratio of robot velocity to the feedback vector
 
 // global variables
 swarm_robot_msg::two_wheel_robot current_robots;
@@ -35,6 +38,13 @@ std::string intToString(int a) {
     std::stringstream ss;
     ss << a;
     return ss.str();
+}
+
+// return sign of a number
+int getSign(double x) {
+    if (x > 0) return 1;
+    if (x < 0) return -1;
+    return 0;
 }
 
 // linear fitting function, revised from C++11 implementation
@@ -234,12 +244,12 @@ int main(int argc, char **argv) {
             }
 
             // 5.calculate perpendicular feedback vector
-            // vector starts from robot position to the perpendicular pedal on the fitted line
+            // vector starts from robot position to the perpendicular point on the fitted line
             double perpendicular_feedback_vector[robot_quantity][2];  // in x and y directions
             double distance_diff;
             for (int i=0; i<robot_quantity; i++) {
                 // slope intercept form, k and b are known parameters
-                // the perpendicular vector is -k/(1+k^2)*(kx+b-y), 1/(1+k^2)*(kx+b-y)
+                // the perpendicular vector is [-k/(1+k^2)*(kx+b-y), 1/(1+k^2)*(kx+b-y)]
                 // with x and y being robot position
                 perpendicular_feedback_vector[i][0] = -fitting_result[i][0]
                     / (1 + pow(fitting_result[i][0],2)) * (fitting_result[i][0]*current_robots.x[i]
@@ -255,12 +265,110 @@ int main(int argc, char **argv) {
                 // left and right are tell by facing the fitted line from the robot position
                 // the chosen robots have smallest projected distance (on the line) at both sides
                 // if no robots are on left or right, then leave it empty
+            // the projected distance of left and right neighbors
+            double neighbor_distance_projected[robot_quantity][2];
+            // represents the robot at which side of the fitted line
+            int fitted_line_side[robot_quantity];
+            double signed_distance_temp;
             for (int i=0; i<robot_quantity; i++) {
-                //
+                // initialize the distances with negative number
+                neighbor_distance_projected[i][0] = -1;
+                neighbor_distance_projected[i][1] = -1;
+                // getSign(kx+b-y)
+                fitted_line_side[i] = getSign(fitting_result[i][0]*current_robots.x[i]
+                    + fitting_result[i][1] - current_robots.y[i]);
+                for (int j=1; j<neighbor_num_in_range[j]+1; j++) {
+                    // calculate the signed distance, left is negative, right is positive
+                    signed_distance_temp = (double)fitted_line_side[i] / sqrt(1+pow(fitting_result[i][0], 2))
+                        * (fitting_result[i][0]*(current_robots.y[index_sort[i][j]]-current_robots.y[i])
+                        + (current_robots.x[index_sort[i][j]]-current_robots.x[i]));
+                    if (signed_distance_temp < 0) {
+                        // neighbor robot on the left
+                        if (neighbor_distance_projected[i][0] < 0) {
+                            // not overwrite with a value yet
+                            neighbor_distance_projected[i][0] = -signed_distance_temp;
+                        }
+                        else if ((-signed_distance_temp) < neighbor_distance_projected[i][0]) {
+                            // there is a closer neighbor at left side
+                            neighbor_distance_projected[i][0] = -signed_distance_temp;
+                        }
+                    }
+                    else if (signed_distance_temp > 0) {
+                        // neighbor robot on the right
+                        if (neighbor_distance_projected[i][1] < 0) {
+                            // not overwrite with a value yet
+                            neighbor_distance_projected[i][1] = signed_distance_temp;
+                        }
+                        else if (signed_distance_temp < neighbor_distance_projected[i][1]) {
+                            // there is a closer neighbor at right side
+                            neighbor_distance_projected[i][1] = signed_distance_temp;
+                        }
+                    }
+                    else {
+                        // signed distance equals 0, should not be here
+                        ROS_WARN("signed distance at parallel direction equals zero");
+                    }
+                }
+                // if project distance been left unchanged of -1, means no robot at that side
             }
 
             // 7.calculate parallel feedback vector
+            double parallel_feedback_vector[robot_quantity][2];
+            double total_spring_diff;
+            for (int i=0; i<robot_quantity; i++) {
+                // the spring effect of both sides
+                total_spring_diff = 0;
+                if (neighbor_distance_projected[i][0] > 0) {
+                    // robot has an effective neighbor at left side, left is negative
+                    total_spring_diff = total_spring_diff - (neighbor_distance_projected[i][0]
+                        - spring_length);
+                }
+                if (neighbor_distance_projected[i][1] > 0) {
+                    // robot has an effective neighbor at right side, right is positive
+                    total_spring_diff = total_spring_diff + (neighbor_distance_projected[i][1]
+                        - spring_length);
+                }
+                // calculate feedback vector based on robot side
+                if (fitted_line_side[i] < 0) {
+                    // robot is at top side of fitted line
+                    // the unit vector along the right side is [-1, -k]/sqrt(1+k^2)
+                    parallel_feedback_vector[i][0] = total_spring_diff * (-1.0)
+                        / sqrt(1+pow(fitting_result[i][0],2));
+                    parallel_feedback_vector[i][1] = total_spring_diff * (-fitting_result[i][0])
+                        / sqrt(1+pow(fitting_result[i][0],2));
+                }
+                else if (fitted_line_side[i] > 0) {
+                    // robot is at bottom side of fitted line
+                    // the unit vector along the right side is [1, k]/sqrt(1+k^2)
+                    parallel_feedback_vector[i][0] = total_spring_diff * 1.0
+                        / sqrt(1+pow(fitting_result[i][0],2));
+                    parallel_feedback_vector[i][1] = total_spring_diff * fitting_result[i][0]
+                        / sqrt(1+pow(fitting_result[i][0],2));
+                }
+                else {
+                    // robot is exactly on the fitted line, should not be here
+                    ROS_WARN("robot is exactly on the fitted line");
+                }
+            }
 
+            // 8.sensor fusion of both perpendicular and parallel feedback
+            double feedback_vector[robot_quantity][2];
+            for (int i=0; i<robot_quantity; i++) {
+                for (int j=0; j<2; j++) {
+                    feedback_vector[i][j] = perpendicular_feedback_vector[i][j] * PERPENDICULAR_PERCENTAGE
+                        + parallel_feedback_vector[i][j] * PARALLEL_PERCENTAGE;
+                }
+            }
+            // calculate the length and direction of feedback vector
+            double feedback_vector_length[robot_quantity];
+            double feedback_vector_direction[robot_quantity];
+            for (int i=0; i<robot_quantity; i++) {
+                feedback_vector_length[i]
+                    = sqrt(pow(feedback_vector[i][0], 2) + pow(feedback_vector[i][1], 2));
+                feedback_vector_direction[i] = atan2(feedback_vector[i][1], feedback_vector[i][0]);
+            }
+
+            // 9.calculate the wheel velocity based on the feedback vector
 
 
 

@@ -23,7 +23,7 @@ double sensing_range = 3.0;
 const int NEIGHBOR_NUM_L_LIMIT = 3;
 const int NEIGHBOR_NUM_H_LIMIT = 6;
 const double DISTANCE_FEEDBACK_RATIO = 1.0;  // no scale
-const double VEL_RATIO = 5.0;  // the ratio of robot velocity relative to feedback vector
+const double VEL_RATIO = 5.0;  // the ratio of robot velocity to the feedback vector
 const double STABLE_THRESHOLD = 0.02;  // temperarily not used
 const double LEFT_WHEEL_POSITION = -0.0157;
 const double RIGHT_WHEEL_POSITION = 0.0157;  // right is positive direction
@@ -315,7 +315,7 @@ int main(int argc, char **argv) {
                 feedback_vector_direction[i] = atan2(feedback_vector[i][1], feedback_vector[i][0]);
             }
 
-            // 5.calculate the wheel velocities
+            // 5.calculate the wheel velocity based on the feedback vector
             // the wheel velocities are calculate so that the robot will move
             // in a constant radius curve to the destination defined by the feedback vector            
             double wheel_vel[robot_quantity][2];  // vel of left and right wheels
