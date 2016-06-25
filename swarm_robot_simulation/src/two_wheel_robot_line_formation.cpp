@@ -250,11 +250,11 @@ int main(int argc, char **argv) {
             }
 
             // 6.find adjacent neighbors for distance feedback in parallel direction
-            // the rules are:
-            // only two neighbors are needed for distance feedback, one on left, one on right
-            // left and right are tell by facing the fitted line from the robot position
-            // the chosen robots have smallest projected distance (on the line) at both sides
-            // if no robots are on left or right, then leave it empty
+            // rules are:
+                // only two neighbors are needed for distance feedback, one on left, one on right
+                // left and right are tell by facing the fitted line from the robot position
+                // the chosen robots have smallest projected distance (on the line) at both sides
+                // if no robots are on left or right, then leave it empty
             for (int i=0; i<robot_quantity; i++) {
                 //
             }

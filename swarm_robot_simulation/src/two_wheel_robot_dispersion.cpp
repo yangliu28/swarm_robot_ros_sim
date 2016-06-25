@@ -229,11 +229,11 @@ int main(int argc, char **argv) {
 
             // 3.find all neighbors that will be used in force feedback control
             // rules are:
-            // in the closest (NEIGHBOR_NUM_H_LIMIT) neighbors, find all that are in spring upper limit
-            // if robots are fewer than (NEIGHBOR_NUM_H_LIMIT), add to (NEIGHBOR_NUM_H_LIMIT)
-            // if robots are even fewer than (NEIGHBOR_NUM_H_LIMIT), then all are neighbors
-            // then check if all distance are satisfied with sensing range
-                // naturally, sensing_range should be at least 2~3 times larger then spring length
+                // in the closest (NEIGHBOR_NUM_H_LIMIT) neighbors, find all in spring upper limit
+                // if robots are fewer than (NEIGHBOR_NUM_H_LIMIT), add to (NEIGHBOR_NUM_H_LIMIT)
+                // if robots are even fewer than (NEIGHBOR_NUM_H_LIMIT), then all are neighbors
+                // then check if all distance are satisfied with sensing range
+                    // naturally, sensing_range should be at least 2~3 times of spring length
             int neighbor_num[robot_quantity];  // the number of vallid neighbors
             // no need to record index
             // they are the first neighbor_num robots in the sorted index list
