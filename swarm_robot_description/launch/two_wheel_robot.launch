@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
-  <!-- launch file specific for dispersion simulation of two wheel robot -->
+  <!-- launch file specific for two wheel robot simulation -->
 
   <!-- parameters that can be overrided -->
   <arg name="robot_quantity" default="20" />

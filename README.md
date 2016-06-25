@@ -19,13 +19,19 @@ This project starts after investigating several swarm robot platforms like Kilob
 Have ROS Indigo installed and workspace setup. Clone this package in ~/ros_ws/src and build with catkin_make.
 
 ## Demo tests
-The two wheel robot dispersion test:
+Two wheel robot dispersion test:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`roslaunch swarm_robot_simulation two_wheel_robot_dispersion.launch robot_quantity:=20 half_range:=0.5`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`roslaunch swarm_robot_description two_wheel_robot.launch robot_quantity:=20 half_range:=0.5`
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_simulation two_wheel_robot_dispersion _spring_length:=0.7 _sensing_range:=2.5`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_simulation two_wheel_robot_dispersion _spring_length:=0.7 _sensing_range:=2.0`
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(optional)
+Two wheel robot line formation test:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`roslaunch swarm_robot_description two_wheel_robot.launch robot_quantity:=25 half_range:=0.7`
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_simulation two_wheel_robot_line_formation _spring_length:=0.7 _sensing_range:=2.0`
+
+Optional, in all previous tests, robots can be added or deleted through:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_description two_wheel_robot_batch_add _robot_quantity:=10 _half_range:=1.0`
 
