@@ -406,7 +406,7 @@ int main(int argc, char **argv) {
             //     std::cout << std::endl;
             // }
 
-            // 6. send service request of wheel velocities
+            // 6.send service request of wheel velocities
             bool call_service;
             for (int i=0; i<robot_quantity; i++) {
                 // left wheel
