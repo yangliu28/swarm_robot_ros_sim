@@ -22,7 +22,7 @@ double spring_length = 0.7;
 double sensing_range = 3.0;
 const double PERPENDICULAR_PERCENTAGE = 0.1;  // used in the fusion of two feedback
 const double PARALLEL_PERCENTAGE = 1.0 - PERPENDICULAR_PERCENTAGE;
-const double VEL_RATIO = 50.0;  // the ratio of robot velocity to the feedback vector
+const double VEL_RATIO = 50.0;  // the ratio of wheel velocity to the feedback vector
 const double LEFT_WHEEL_POSITION = -0.0157;
 const double RIGHT_WHEEL_POSITION = 0.0157;  // right is positive direction
 
