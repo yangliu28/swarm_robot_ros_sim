@@ -11,15 +11,20 @@
 #include <numeric>
 #include <vector>
 
+#include <iostream>  // debug
+#include <iomanip>
+
 // flow control parameters
 const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is active
 const double CONTROL_PERIOD = 0.001;
 // simulation control parameters
 double spring_length = 0.7;
 double sensing_range = 3.0;
-const double PERPENDICULAR_PERCENTAGE = 0.4;  // used in the fusion of two feedback
-const double PARALLEL_PERCENTAGE = 1 - PERPENDICULAR_PERCENTAGE;
-const double VEL_RATIO = 1.0;  // the ratio of robot velocity to the feedback vector
+const double PERPENDICULAR_PERCENTAGE = 0.1;  // used in the fusion of two feedback
+const double PARALLEL_PERCENTAGE = 1.0 - PERPENDICULAR_PERCENTAGE;
+const double VEL_RATIO = 50.0;  // the ratio of robot velocity to the feedback vector
+const double LEFT_WHEEL_POSITION = -0.0157;
+const double RIGHT_WHEEL_POSITION = 0.0157;  // right is positive direction
 
 // global variables
 swarm_robot_msg::two_wheel_robot current_robots;
@@ -104,8 +109,6 @@ int main(int argc, char **argv) {
     }
     else
         ROS_INFO_STREAM("using default spring length: 0.7");
-    // calculate other parameter depending on spring length
-    double spring_upper_limit = spring_length * (1 + spring_upper_limit_ratio);
     // get sensing range
     bool get_sensing_range = nh.getParam("sensing_range", sensing_range);
     if (get_sensing_range) {
@@ -193,6 +196,8 @@ int main(int argc, char **argv) {
                 }
             }
             // full sorting, bubble sorting method
+            double distance_temp;
+            int index_temp;
             for (int i=0; i<robot_quantity; i++) {
                 for (int j=0; j<robot_quantity-1; j++) {
                     // j control the loops of bubble sorting
@@ -224,6 +229,16 @@ int main(int argc, char **argv) {
                         break;
                     }
                 }
+            }
+
+            // print out number of neighbors in sensing range
+            if (print_debug_msg) {
+                std::cout << "number of neighbors in sensing range" << std::endl;
+                for (int i=0; i<robot_quantity; i++) {
+                    std::cout << std::setw(5) << current_robots.index[i]
+                        << std::setw(15) << neighbor_num_in_range[i] << std::endl;
+                }
+                std::cout << std::endl;
             }
 
             // 4.calculate the fitted line for the in range neighbors, including itself
