@@ -69,8 +69,8 @@ std::vector<double> random_position(double half_range) {
     std::vector<double> position_2d;
     position_2d.resize(2);  // contains 2 numbers
     // generate the pseudorandom float number between [-half_range, half_range]
-    position_2d[0] = (((double)rand())/(double)RAND_MAX - 0.5)*half_range;
-    position_2d[1] = (((double)rand())/(double)RAND_MAX - 0.5)*half_range;
+    position_2d[0] = (((double)rand())/(double)RAND_MAX * 2.0 - 1.0) * half_range;
+    position_2d[1] = (((double)rand())/(double)RAND_MAX * 2.0 - 1.0) * half_range;
     return position_2d;
 }
 
