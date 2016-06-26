@@ -1,6 +1,6 @@
-// this node is the line formation of two wheel robots
+// this node is the line formation simulation of two wheel robots
 
-// algirithm explanation:
+// line formation algirithm explanation:
 
 
 // subscribe to topic "/swarm_sim/two_wheel_robot"

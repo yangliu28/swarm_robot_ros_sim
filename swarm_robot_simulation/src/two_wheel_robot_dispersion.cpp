@@ -2,7 +2,7 @@
 
 // this is the first simulation program written for two wheel robots
 
-// algorithm explanation:
+// dispersion algorithm explanation:
 
 
 // subscribe to topic "/swarm_sim/two_wheel_robot"
