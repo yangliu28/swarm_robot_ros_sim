@@ -31,6 +31,12 @@ Two wheel robot line formation simulation:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_simulation two_wheel_robot_line_formation _spring_length:=0.7 _sensing_range:=2.0`
 
+Two wheel robot aggregation simulation:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`roslaunch swarm_robot_description two_wheel_robot.launch robot_quantity:=30 half_range:=2.0`
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_simulation two_wheel_robot_aggregation _sensing_range:=1.5`
+
 Optionally, in all previous tests, robots can be added or deleted through:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosrun swarm_robot_description two_wheel_robot_batch_add _robot_quantity:=10 _half_range:=1.0`

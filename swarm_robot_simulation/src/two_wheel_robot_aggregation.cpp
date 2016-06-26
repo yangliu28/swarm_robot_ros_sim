@@ -18,9 +18,9 @@
 const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is active
 const double CONTROL_PERIOD = 0.001;
 // simulation control parameters
-double spring_length = 0.1;  // the distance to maintain when aggregation
+const double SPRING_LENGTH = 0.1;  // the distance to maintain when aggregation
 double sensing_range = 2.0;
-const double COLLISION_VECTOR_PERCENTAGE = 90.0/100.0;
+const double COLLISION_VECTOR_PERCENTAGE = 85.0/100.0;
 const double DRIVING_VECTOR_PERCENTAGE = 1.0 - COLLISION_VECTOR_PERCENTAGE;
 const double VEL_RATIO = 50.0;  // the ratio of wheel velocity to the feedback vector
 const double LEFT_WHEEL_POSITION = -0.0157;
@@ -76,15 +76,6 @@ int main(int argc, char **argv) {
     ROS_INFO("gazebo service set_joint_properties is ready");
 
     // get the settings for this simulation from private parameter
-    // get spring length
-    bool get_spring_length = nh.getParam("spring_length", spring_length);
-    if (get_spring_length) {
-        ROS_INFO_STREAM("using spring length passed in: " << spring_length);
-        // delete parameter
-        nh.deleteParam("spring_length");
-    }
-    else
-        ROS_INFO_STREAM("using default spring length: 0.1");
     // get sensing range
     bool get_sensing_range = nh.getParam("sensing_range", sensing_range);
     if (get_sensing_range) {
@@ -212,7 +203,7 @@ int main(int argc, char **argv) {
             for (int i=0; i<robot_quantity; i++) {
                 neighbor_num_in_spring[i] = 0;
                 for (int j=1; j<robot_quantity; j++) {
-                    if (distance_sort[i][j] < spring_length) {
+                    if (distance_sort[i][j] < SPRING_LENGTH) {
                         neighbor_num_in_spring[i] = neighbor_num_in_spring[i] + 1;
                     }
                     else {
@@ -267,7 +258,7 @@ int main(int argc, char **argv) {
                 collision_feedback_vector[i][0] = 0.0;
                 collision_feedback_vector[i][1] = 0.0;
                 for (int j=1; j<neighbor_num_in_spring[i]+1; j++) {
-                    distance_diff = spring_length - distance_sort[i][j];
+                    distance_diff = SPRING_LENGTH - distance_sort[i][j];
                     collision_feedback_vector[i][0] = collision_feedback_vector[i][0] + (current_robots.x[i]
                         - current_robots.x[index_sort[i][j]]) * distance_diff / distance_sort[i][j];
                     collision_feedback_vector[i][1] = collision_feedback_vector[i][1] + (current_robots.y[i]
