@@ -2,6 +2,9 @@
 
 // this is the first simulation program written for two wheel robots
 
+// algorithm explanation:
+
+
 // subscribe to topic "/swarm_sim/two_wheel_robot"
 // service client to service "/gazebo/set_joint_properties"
 

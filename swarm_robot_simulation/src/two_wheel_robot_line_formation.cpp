@@ -1,5 +1,8 @@
 // this node is the line formation of two wheel robots
 
+// algirithm explanation:
+
+
 // subscribe to topic "/swarm_sim/two_wheel_robot"
 // service client to service "/gazebo/set_joint_properties"
 
