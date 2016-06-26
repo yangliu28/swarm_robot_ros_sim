@@ -20,9 +20,9 @@ const double CONTROL_PERIOD = 0.001;
 // simulation control parameters
 double spring_length = 0.1;  // the distance to maintain when aggregation
 double sensing_range = 2.0;
-const double COLLISION_VECTOR_PERCENTAGE = 95.0/100.0;
+const double COLLISION_VECTOR_PERCENTAGE = 90.0/100.0;
 const double DRIVING_VECTOR_PERCENTAGE = 1.0 - COLLISION_VECTOR_PERCENTAGE;
-const double VEL_RATIO = 5.0;  // the ratio of wheel velocity to the feedback vector
+const double VEL_RATIO = 50.0;  // the ratio of wheel velocity to the feedback vector
 const double LEFT_WHEEL_POSITION = -0.0157;
 const double RIGHT_WHEEL_POSITION = 0.0157;  // right is positive direction
 
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         nh.deleteParam("spring_length");
     }
     else
-        ROS_INFO_STREAM("using default spring length: 0.7");
+        ROS_INFO_STREAM("using default spring length: 0.1");
     // get sensing range
     bool get_sensing_range = nh.getParam("sensing_range", sensing_range);
     if (get_sensing_range) {
@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
         nh.deleteParam("sensing_range");
     }
     else
-        ROS_INFO_STREAM("using default sensing range: 3.0");
+        ROS_INFO_STREAM("using default sensing range: 2.0");
 
     // instantiate a subscriber to topic "/swarm_sim/two_wheel_robot"
     ros::Subscriber two_wheel_robot_subscriber
@@ -207,16 +207,6 @@ int main(int argc, char **argv) {
                 }
             }
 
-            // print out number of neighbors in sensing range
-            if (print_debug_msg) {
-                std::cout << "number of neighbors in sensing range" << std::endl;
-                for (int i=0; i<robot_quantity; i++) {
-                    std::cout << std::setw(5) << current_robots.index[i]
-                        << std::setw(15) << neighbor_num_in_range[i] << std::endl;
-                }
-                std::cout << std::endl;
-            }
-
             // 4.find all neighbors in spring range
             int neighbor_num_in_spring[robot_quantity];
             for (int i=0; i<robot_quantity; i++) {
@@ -231,12 +221,13 @@ int main(int argc, char **argv) {
                 }
             }
 
-            // print out number of neighbors in spring range
+            // print out number of neighbors in sensing range ans spring range
             if (print_debug_msg) {
-                std::cout << "number of neighbors in spring range" << std::endl;
+                std::cout << "number of neighbors in sensing range and spring range" << std::endl;
                 for (int i=0; i<robot_quantity; i++) {
                     std::cout << std::setw(5) << current_robots.index[i]
-                        << std::setw(15) << neighbor_num_in_spring[i] << std::endl;
+                        << std::setw(5) << neighbor_num_in_range[i]
+                        << std::setw(5) << neighbor_num_in_spring[i] << std::endl;
                 }
                 std::cout << std::endl;
             }

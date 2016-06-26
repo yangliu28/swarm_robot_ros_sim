@@ -22,7 +22,7 @@ const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is acti
 const double CONTROL_PERIOD = 0.001;
 // simulation control parameters
 double spring_length = 0.7;
-double sensing_range = 3.0;
+double sensing_range = 2.0;
 const double PERPENDICULAR_PERCENTAGE = 0.1;  // used in the fusion of two feedback
 const double PARALLEL_PERCENTAGE = 1.0 - PERPENDICULAR_PERCENTAGE;
 const double VEL_RATIO = 50.0;  // the ratio of wheel velocity to the feedback vector
@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
         nh.deleteParam("sensing_range");
     }
     else
-        ROS_INFO_STREAM("using default sensing range: 3.0");
+        ROS_INFO_STREAM("using default sensing range: 2.0");
 
     // instantiate a subscriber to topic "/swarm_sim/two_wheel_robot"
     ros::Subscriber two_wheel_robot_subscriber

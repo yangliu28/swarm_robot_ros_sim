@@ -22,7 +22,7 @@ const double CONTROL_PERIOD = 0.001;
 // simulation control parameters
 double spring_length = 0.7;  // default spring length, may change from private parameter
 double spring_upper_limit_ratio = 0.30;
-double sensing_range = 3.0;
+double sensing_range = 2.0;
 const int NEIGHBOR_NUM_L_LIMIT = 3;
 const int NEIGHBOR_NUM_H_LIMIT = 6;
 const double DISTANCE_FEEDBACK_RATIO = 1.0;  // no scale
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
         nh.deleteParam("sensing_range");
     }
     else
-        ROS_INFO_STREAM("using default sensing range: 3.0");
+        ROS_INFO_STREAM("using default sensing range: 2.0");
 
     // instantiate a subscriber to topic "/swarm_sim/two_wheel_robot"
     ros::Subscriber two_wheel_robot_subscriber
