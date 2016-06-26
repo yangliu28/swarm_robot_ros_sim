@@ -3,7 +3,13 @@
 // this is the first simulation program written for two wheel robots
 
 // dispersion algorithm explanation:
-
+// This simulation uses the force feedback from a spring model to control the speed and moving direction
+// of the robots. The key is to decide which robots will be the neighbors. In the sensing range of one
+// robot, all robots of distances within the spring length plus a small portion of spring length are
+// qualified. If the number exceed a defined upper limit (6 for example), the closest 6 will be chosen.
+// If the number is smaller than a defined lower limit (3 for example), the distance constraint will be
+// overrode, and trying to get as much neighbor number as the define lower limit if possible (within
+// sensing range). Then calculating the feedback vector based on the spring force.
 
 // subscribe to topic "/swarm_sim/two_wheel_robot"
 // service client to service "/gazebo/set_joint_properties"

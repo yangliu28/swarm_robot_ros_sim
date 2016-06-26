@@ -1,7 +1,12 @@
 // this node is the aggregation simulation of two wheel robots
 
 // aggregation algorithm:
-
+// This simulation aggregates a swarm of two wheel robots by a geometric center method. Each robot
+// calculates the geometric center of all its neighbors in the sensing range. The first feedback vector
+// starts from the robot to the geometric center. In order to avoid collision, a spring model with only
+// propulsional force (the spring only pushes two robots away, not drag them together) is used for all
+// neighbors with distance smaller than spring length. This is the second feedback vector. Then two feedback
+// vector will be fused into one with weighted ratio.
 
 // subscribe to topic "/swarm_sim/two_wheel_robot"
 // service client to service "/gazebo/set_joint_properties"

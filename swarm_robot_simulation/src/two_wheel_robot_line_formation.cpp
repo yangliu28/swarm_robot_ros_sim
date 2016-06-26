@@ -1,7 +1,15 @@
 // this node is the line formation simulation of two wheel robots
 
 // line formation algirithm explanation:
-
+// This simulation forms a line by using a local line fitting technique. Each robot does a linear fitting
+// on all its neighbor robots in the sensing range. Then calculating two feedback vectors to drive the
+// robot into its fitted line: perpendicular feedback vector and parallel feedback vector. Perpendicular
+// feedback vector starts from the robot to the perpendicular point on the fitted line. Computation of
+// parallel feedback vector needs two neighboring robot. These two neighbors locates at the left and right
+// of the robot, they have the smallest distance to the perpendicular line. It's OK that the left or
+// right robot is missing (or both). Neighbors' distance to the perpendicular will be calculate the parallel
+// feedback vector as in the spring model. Then two feedback vector will be fused into one with weighted
+// ratio.
 
 // subscribe to topic "/swarm_sim/two_wheel_robot"
 // service client to service "/gazebo/set_joint_properties"
