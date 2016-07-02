@@ -2,7 +2,9 @@
 A swarm robot simulation environment for ROS to be used with Gazebo.
 
 ## Motivation
-This project starts after investigating several swarm robot platforms like Kilobot, E-puck, Jasmine, Alice, etc, and working on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while. It would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. This project is also for the purpose of learning programming and various tools in ROS.
+This project starts after investigating several swarm robot platforms like Kilobot, E-puck, Jasmine, Alice, etc, and working on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while. It would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. It aims to be a general swarm robots simulation platform.
+
+Current research topic is autonomous formation control.
 
 ## What's inside
 *swarm_robot_ros_sim* contains packages each of which features a set of functionalities for this simulation platform:
