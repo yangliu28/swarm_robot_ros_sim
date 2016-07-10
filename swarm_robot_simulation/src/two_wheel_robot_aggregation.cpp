@@ -15,12 +15,15 @@
 // exit when the minimum number of robots in collision range is equal or larger than 3
 // the robots are pushed into the collision range while driven by the driving vector
 // 3 when robots on the rim, 6 or higher for robots inside, highest of 9 is observed
+// (3 might be a little strict, but it works well robot quantity is large)
+// (robot quantity smaller than 20 may end up with neighbor number of 2)
 // exit only when the two wheel robot topic is active
 // not compatible when there are seperated robot or group of robots:
     // no isolated group(desired situation), exit when goal is acheved
     // isolated single robot, neighbor number is 0, will not exit
-    // isolated group of robots<=3, maximum neighbor number is 2, will not exit
-    // isolated group of robots>3, maximum neighbor number is 3, will exit
+    // isolated group of robots<=3, minimal neighbor number is 2, will not exit
+    // isolated group of robots>3, minimal neighbor number is 3, will exit
+    // robot quantity smaller than 20, may stabilize on neighbor number of 2, will not exit
 
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
