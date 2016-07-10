@@ -118,6 +118,8 @@ int main(int argc, char **argv) {
     // aggregation loop
     ros::Time timer_now;
     ros::Time loop_last_timer = ros::Time::now();  // use to examine loop rate
+    ros::Time timer_program_start;  // for calculating time consumption of simulation
+    bool timer_program_start_initialized = false;
     double loops_sum_period;
     int loop_count = 0;
     ros::Rate loop_rate(1.0/CONTROL_PERIOD);  // use to control loop rate
@@ -125,10 +127,18 @@ int main(int argc, char **argv) {
     while (ros::ok()) {
         int robot_quantity = current_robots.index.size();
 
-        // check if two wheel robot topic is active
+        // get current time stamp
         timer_now = ros::Time::now();
         // timer_now is zero when it doesn't get simulation timer under topic /clock
         // it happens in the first few moments when this node starts, not sure why
+        // initialize program start timer
+        if (!timer_program_start_initialized) {
+            if (timer_now.toSec() > 0) {
+                timer_program_start = timer_now;
+                timer_program_start_initialized = true;
+            }
+        }
+        // check if two wheel robot topic is active
         if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD
             && timer_now.toSec() > 0) {
             // the topic is been actively published
@@ -452,6 +462,8 @@ int main(int argc, char **argv) {
                 ROS_INFO_STREAM("minimum neighbor number in collision range: "
                     << min_neighbor_num_in_spring);
                 ROS_INFO("two wheel robot aggregation program exit: criteria satisfied");
+                ROS_INFO_STREAM("time consumption for this simulation: "
+                    << (ros::Time::now() - timer_program_start).toSec());
                 break;  // exit this program
             }
 
