@@ -1,6 +1,6 @@
 // this node is the aggregation simulation of two wheel robots
 
-// aggregation algorithm:
+// aggregation algorithm: (geometric center is replaced with center of minimum covering circle)
 // This simulation aggregates a swarm of two wheel robots by a geometric center method. Each robot
 // calculates the geometric center of all its neighbors in the sensing range. The first feedback vector
 // starts from the robot to the geometric center. In order to avoid collision, a spring model with only
@@ -24,6 +24,8 @@
     // isolated group of robots<=3, minimal neighbor number is 2, will not exit
     // isolated group of robots>3, minimal neighbor number is 3, will exit
     // robot quantity smaller than 20, may stabilize on neighbor number of 2, will not exit
+
+// replace the geometric center with center of minimum covering circle (07/10/2016)
 
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
@@ -286,6 +288,13 @@ int main(int argc, char **argv) {
                     driving_feedback_vector[i][1] = 0.0;
                 }
             }
+
+            // 5.calculate driving feedback vector based on minimum covering circle of in-range neighbors
+            // double driving_feedback_vector[robot_quantity][2];
+            // double geometric_center[2];
+            // for (int i=0; i<robot_quantity; i++) {
+            //     //
+            // }
 
             // 6.calculate collision feedback vector from in spring range neighbors
             double collision_feedback_vector[robot_quantity][2];
