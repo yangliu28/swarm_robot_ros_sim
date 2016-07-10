@@ -11,7 +11,7 @@
 // subscribe to topic "/swarm_sim/two_wheel_robot"
 // service client to service "/gazebo/set_joint_properties"
 
-// add exit criteria when goal is acheved (07/10/2016)
+// add exit criteria when goal is achieved (07/10/2016)
 // exit when the minimum number of robots in collision range is equal or larger than 3
 // the robots are pushed into the collision range while driven by the driving vector
 // 3 when robots on the rim, 6 or higher for robots inside, highest of 9 is observed
@@ -219,8 +219,7 @@ int main(int argc, char **argv) {
 
             // 4.find all neighbors in spring range
             int neighbor_num_in_spring[robot_quantity];
-            // for simulation exiting control
-            int minimum_neighbor_num_in_spring = 1000;
+            int min_neighbor_num_in_spring = 1000;  // for simulation exiting control
             for (int i=0; i<robot_quantity; i++) {
                 neighbor_num_in_spring[i] = 0;
                 for (int j=1; j<robot_quantity; j++) {
@@ -232,8 +231,8 @@ int main(int argc, char **argv) {
                     }
                 }
                 // update minimum neighbor num in spring range
-                if (minimum_neighbor_num_in_spring > neighbor_num_in_spring[i]) {
-                    minimum_neighbor_num_in_spring = neighbor_num_in_spring[i];
+                if (min_neighbor_num_in_spring > neighbor_num_in_spring[i]) {
+                    min_neighbor_num_in_spring = neighbor_num_in_spring[i];
                 }
             }
 
@@ -420,9 +419,9 @@ int main(int argc, char **argv) {
                     ROS_ERROR("fail to connect with gazebo server when set right wheel vel");
             }
 
-            // 10.exit simulation when minimum neighbor number in collision range is >= 3
-            if (minimum_neighbor_num_in_spring >= 3) {
-                // prepare to exit program, set wheel velocity of all robots to zero
+            // 10.exit program when minimum neighbor number in collision range is >= 3
+            if (min_neighbor_num_in_spring >= 3) {
+                // prepare to exit, set wheel velocity of all robots to zero
                 for (int i=0; i<robot_quantity; i++) {
                     // left wheel
                     set_joint_properties_srv_msg.request.joint_name
@@ -451,8 +450,8 @@ int main(int argc, char **argv) {
                 }
                 // exit message
                 ROS_INFO_STREAM("minimum neighbor number in collision range: "
-                    << minimum_neighbor_num_in_spring);
-                ROS_INFO("two wheel robot aggregation simulation exit: criteria satisfied");
+                    << min_neighbor_num_in_spring);
+                ROS_INFO("two wheel robot aggregation program exit: criteria satisfied");
                 break;  // exit this program
             }
 

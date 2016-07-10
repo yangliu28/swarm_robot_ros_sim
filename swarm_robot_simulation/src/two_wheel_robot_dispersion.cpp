@@ -14,6 +14,11 @@
 // subscribe to topic "/swarm_sim/two_wheel_robot"
 // service client to service "/gazebo/set_joint_properties"
 
+// add exit criteria when goal is achieved (07/10/2016)
+// exit when the maximum distance difference with spring length of all robots is lower than a threshold
+// this threshold is calculate as a percentage of spring length
+// exit only when the two wheel robot topic is active
+
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
 #include <gazebo_msgs/SetJointProperties.h>
@@ -25,6 +30,7 @@
 // flow control parameters
 const double TOPIC_ACTIVE_PERIOD = 1.0;  // threshold to tell if a topic is active
 const double CONTROL_PERIOD = 0.001;
+const double DISTANCE_DIFF_SPRING_LENGTH_RATIO = 0.5;  // exit control parameter
 // simulation control parameters
 double spring_length = 0.7;  // default spring length, may change from private parameter
 double spring_upper_limit_ratio = 0.30;
@@ -99,6 +105,8 @@ int main(int argc, char **argv) {
         ROS_INFO_STREAM("using default spring length: 0.7");
     // calculate other parameter depending on spring length
     double spring_upper_limit = spring_length * (1 + spring_upper_limit_ratio);
+    // calculate exit control threshold base on spring length
+    const double MAX_DISTANCE_DIFF = spring_length * DISTANCE_DIFF_SPRING_LENGTH_RATIO;
     // get sensing range
     bool get_sensing_range = nh.getParam("sensing_range", sensing_range);
     if (get_sensing_range) {
@@ -303,6 +311,7 @@ int main(int argc, char **argv) {
             // 4.calculate feedback vector for each robot
             double feedback_vector[robot_quantity][2];  // vector in x and y for each robot
             double distance_diff;
+            double max_distance_diff = 0;  // for simulation exiting control
             for (int i=0; i<robot_quantity; i++) {
                 feedback_vector[i][0] = 0.0;
                 feedback_vector[i][1] = 0.0;
@@ -314,6 +323,10 @@ int main(int argc, char **argv) {
                     // feedback on y
                     feedback_vector[i][1] = feedback_vector[i][1] + DISTANCE_FEEDBACK_RATIO * distance_diff
                         * (current_robots.y[index_sort[i][j]] - current_robots.y[i]) / distance_sort[i][j];
+                    // update the maximum distance difference with spring length
+                    if (max_distance_diff < std::abs(distance_diff)) {
+                        max_distance_diff = std::abs(distance_diff);
+                    }
                 }
             }
             // calculate the length and direction of feedback vector
@@ -447,7 +460,45 @@ int main(int argc, char **argv) {
                     ROS_ERROR("fail to connect with gazebo server when set right wheel vel");
             }
 
-            // break;  // debug purpose
+            // 7.exiting program when maximum neighbor robot distance is lower than a threshold
+            // if (print_debug_msg) {
+            //     // print current max distance difference
+            //     std::cout << "current maximum distance difference is " << max_distance_diff << std::endl;
+            // }
+            if (max_distance_diff < MAX_DISTANCE_DIFF) {
+                // prepare to exit, set wheel velocity of all robots to zero
+                for (int i=0; i<robot_quantity; i++) {
+                    // left wheel
+                    set_joint_properties_srv_msg.request.joint_name
+                        = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::left_motor";
+                    set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = 0.0;
+                    call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
+                    if (call_service) {
+                        if (!set_joint_properties_srv_msg.response.success)
+                            // possibly the robot not found
+                            ROS_WARN("the robot model not found when reset left wheel vel");
+                    }
+                    else
+                        ROS_ERROR("fail to connect with gazebo server when reset left wheel vel");
+                    // right wheel
+                    set_joint_properties_srv_msg.request.joint_name
+                        = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::right_motor";
+                    set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = 0.0;
+                    call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
+                    if (call_service) {
+                        if (!set_joint_properties_srv_msg.response.success)
+                            // possibly the robot not found
+                            ROS_WARN("the robot model not found when reset right wheel vel");
+                    }
+                    else
+                        ROS_ERROR("fail to connect with gazebo server when reset right wheel vel");
+                }
+                // exit message
+                ROS_INFO_STREAM("maximum distance difference: "
+                    << max_distance_diff);
+                ROS_INFO("two wheel robot dispersion program exit: criteria satisfied");
+                break;  // exit this program
+            }
 
         }
         else {
