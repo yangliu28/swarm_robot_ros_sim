@@ -11,7 +11,7 @@
 // subscribe to topic "/swarm_sim/two_wheel_robot"
 // service client to service "/gazebo/set_joint_properties"
 
-// add exit criteria when goal is acheved(07/10/2016)
+// add exit criteria when goal is acheved (07/10/2016)
 // exit when the minimum number of robots in collision range is equal or larger than 3
 // the robots are pushed into the collision range while driven by the driving vector
 // 3 when robots on the rim, 6 or higher for robots inside, highest of 9 is observed
