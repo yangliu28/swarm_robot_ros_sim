@@ -155,7 +155,8 @@ int main(int argc, char **argv) {
 
         // check if two wheel robot topic is active
         timer_now = ros::Time::now();
-        if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD) {
+        if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD
+            && timer_now.toSec() > 0) {
             // the topic is been actively published
             // ROS_WARN("topic is active");
 
