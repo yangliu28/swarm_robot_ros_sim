@@ -11,6 +11,17 @@
 // subscribe to topic "/swarm_sim/two_wheel_robot"
 // service client to service "/gazebo/set_joint_properties"
 
+// add exit criteria when goal is acheved(07/10/2016)
+// exit when the minimum number of robots in collision range is equal or larger than 3
+// the robots are pushed into the collision range while driven by the driving vector
+// 3 when robots on the rim, 6 or higher for robots inside, highest of 9 is observed
+// exit only when the two wheel robot topic is active
+// not compatible when there are seperated robot or group of robots:
+    // no isolated group(desired situation), exit when goal is acheved
+    // isolated single robot, neighbor number is 0, will not exit
+    // isolated group of robots<=3, maximum neighbor number is 2, will not exit
+    // isolated group of robots>3, maximum neighbor number is 3, will exit
+
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
 #include <gazebo_msgs/SetJointProperties.h>
@@ -116,7 +127,10 @@ int main(int argc, char **argv) {
 
         // check if two wheel robot topic is active
         timer_now = ros::Time::now();
-        if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD) {
+        // timer_now is zero when it doesn't get simulation timer under topic /clock
+        // it happens in the first few moments when this node starts, not sure why
+        if ((timer_now - two_wheel_robot_topic_timer).toSec() < TOPIC_ACTIVE_PERIOD
+            && timer_now.toSec() > 0) {
             // the topic is been actively published
             // ROS_WARN("topic is active");
 
@@ -205,6 +219,8 @@ int main(int argc, char **argv) {
 
             // 4.find all neighbors in spring range
             int neighbor_num_in_spring[robot_quantity];
+            // for simulation exiting control
+            int minimum_neighbor_num_in_spring = 1000;
             for (int i=0; i<robot_quantity; i++) {
                 neighbor_num_in_spring[i] = 0;
                 for (int j=1; j<robot_quantity; j++) {
@@ -215,11 +231,15 @@ int main(int argc, char **argv) {
                         break;
                     }
                 }
+                // update minimum neighbor num in spring range
+                if (minimum_neighbor_num_in_spring > neighbor_num_in_spring[i]) {
+                    minimum_neighbor_num_in_spring = neighbor_num_in_spring[i];
+                }
             }
 
-            // print out number of neighbors in sensing range ans spring range
+            // print out number of neighbors in sensing range and spring range
             if (print_debug_msg) {
-                std::cout << "number of neighbors in sensing range and spring range" << std::endl;
+                std::cout << "number of neighbors in sensing range and spring range:" << std::endl;
                 for (int i=0; i<robot_quantity; i++) {
                     std::cout << std::setw(5) << current_robots.index[i]
                         << std::setw(5) << neighbor_num_in_range[i]
@@ -400,11 +420,46 @@ int main(int argc, char **argv) {
                     ROS_ERROR("fail to connect with gazebo server when set right wheel vel");
             }
 
+            // 10.exit simulation when minimum neighbor number in collision range is >= 3
+            if (minimum_neighbor_num_in_spring >= 3) {
+                // prepare to exit program, set wheel velocity of all robots to zero
+                for (int i=0; i<robot_quantity; i++) {
+                    // left wheel
+                    set_joint_properties_srv_msg.request.joint_name
+                        = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::left_motor";
+                    set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = 0.0;
+                    call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
+                    if (call_service) {
+                        if (!set_joint_properties_srv_msg.response.success)
+                            // possibly the robot not found
+                            ROS_WARN("the robot model not found when reset left wheel vel");
+                    }
+                    else
+                        ROS_ERROR("fail to connect with gazebo server when reset left wheel vel");
+                    // right wheel
+                    set_joint_properties_srv_msg.request.joint_name
+                        = "two_wheel_robot_" + intToString(current_robots.index[i]) + "::right_motor";
+                    set_joint_properties_srv_msg.request.ode_joint_config.vel[0] = 0.0;
+                    call_service = set_joint_properties_client.call(set_joint_properties_srv_msg);
+                    if (call_service) {
+                        if (!set_joint_properties_srv_msg.response.success)
+                            // possibly the robot not found
+                            ROS_WARN("the robot model not found when reset right wheel vel");
+                    }
+                    else
+                        ROS_ERROR("fail to connect with gazebo server when reset right wheel vel");
+                }
+                // exit message
+                ROS_INFO_STREAM("minimum neighbor number in collision range: "
+                    << minimum_neighbor_num_in_spring);
+                ROS_INFO("two wheel robot aggregation simulation exit: criteria satisfied");
+                break;  // exit this program
+            }
 
         }
         else {
             // the topic is not active, meaning two wheel robot manager node is down
-            // ROS_WARN("when topic is inactive");
+            // ROS_WARN("topic is inactive");
 
             if (stop_all_robot_once) {
                 // set wheel velocity of all robots to zero according to last topic update
