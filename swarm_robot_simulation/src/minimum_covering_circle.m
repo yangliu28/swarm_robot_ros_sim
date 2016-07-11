@@ -49,10 +49,10 @@ for i=1:length(position)
     end
 end
 
-% find the rest convex points base on the first convex segment
+% continue find the rest convex points
 % the only difference with finding the first one is the base_vector
 convex_index_index = 2;  % current index of convex_index
-convex_index_next = convex_index(2);  % so that it's not equal to  first index
+convex_index_next = convex_index(2);  % so that it's not equal to first index
 while (convex_index_next ~= convex_index(1))
     % next convex index is not equal to the first convex index
     max_angle = 0;
@@ -127,7 +127,6 @@ while true
             position(convex_index(side_index(2)),:);
         subtended_angle = acos(dot(vector_1,vector_2)/norm(vector_1)/norm(vector_2));
         if subtended_angle > pi/2
-            obtuse = true;
             side_index = [side_index(1),convex_index_index];
             continue;
         end

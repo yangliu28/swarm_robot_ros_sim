@@ -265,31 +265,35 @@ int main(int argc, char **argv) {
             }
 
             // 5.calculate driving feedback vector based on geometric center of in-range neighbors
-            double driving_feedback_vector[robot_quantity][2];
-            double geometric_center[2];
-            for (int i=0; i<robot_quantity; i++) {
-                // check the in sensor range neighbor numbers
-                if (neighbor_num_in_range[i] > 0) {
-                    // there is at least one neighbor in sensor range
-                    geometric_center[0] = 0.0;  // initialize the geometric center
-                    geometric_center[1] = 0.0;
-                    // solve for the geometric center
-                    for (int j=1; j<neighbor_num_in_range[i]+1; j++) {
-                        geometric_center[0] = geometric_center[0] + current_robots.x[index_sort[i][j]];
-                        geometric_center[1] = geometric_center[1] + current_robots.y[index_sort[i][j]];
-                    }
-                    geometric_center[0] = geometric_center[0] / double(neighbor_num_in_range[i]);
-                    geometric_center[1] = geometric_center[1] / double(neighbor_num_in_range[i]);
-                    // calculate the driving feedback vector
-                    driving_feedback_vector[i][0] = geometric_center[0] - current_robots.x[i];
-                    driving_feedback_vector[i][1] = geometric_center[1] - current_robots.y[i];
-                }
-                else {
-                    // no neighbor in sensor range
-                    driving_feedback_vector[i][0] = 0.0;
-                    driving_feedback_vector[i][1] = 0.0;
-                }
-            }
+            // double driving_feedback_vector[robot_quantity][2];
+            // double geometric_center[2];
+            // for (int i=0; i<robot_quantity; i++) {
+            //     // check the in sensor range neighbor numbers
+            //     if (neighbor_num_in_range[i] > 0) {
+            //         // there is at least one neighbor in sensor range
+            //         geometric_center[0] = 0.0;  // initialize the geometric center
+            //         geometric_center[1] = 0.0;
+            //         // solve for the geometric center
+            //         for (int j=1; j<neighbor_num_in_range[i]+1; j++) {
+            //             geometric_center[0] = geometric_center[0] + current_robots.x[index_sort[i][j]];
+            //             geometric_center[1] = geometric_center[1] + current_robots.y[index_sort[i][j]];
+            //         }
+            //         geometric_center[0] = geometric_center[0] / double(neighbor_num_in_range[i]);
+            //         geometric_center[1] = geometric_center[1] / double(neighbor_num_in_range[i]);
+            //         // calculate the driving feedback vector
+            //         driving_feedback_vector[i][0] = geometric_center[0] - current_robots.x[i];
+            //         driving_feedback_vector[i][1] = geometric_center[1] - current_robots.y[i];
+            //     }
+            //     else {
+            //         // no neighbor in sensor range
+            //         driving_feedback_vector[i][0] = 0.0;
+            //         driving_feedback_vector[i][1] = 0.0;
+            //     }
+            // }
+
+            ///////////////////////////////////////////////////////////
+            // core algorithm, find minimum covering circle, start here
+            ///////////////////////////////////////////////////////////
 
             // 5.calculate driving feedback vector based on minimum covering circle of in-range neighbors
             double driving_feedback_vector[robot_quantity][2];
@@ -338,33 +342,177 @@ int main(int argc, char **argv) {
                     }
 
                     // find second point on the convex hull
-                    std::vector<int> index_container;  // index for the robots in pos_x, pos_y
-                    // find the next point only in this container
-                    index_container.resize(neighbor_num_in_range[i]);
-                    for (int j=0; j<neighbor_num_in_range[i]; j++)
-                        index_container[j] = j;
-                    // not necessary to delete the index of the leftmost robot from the container
-                    // it will be available for searching so the convex hull can be closed
+                    std::vector<double> base_vector(2,0);  // 2 number of 0
+                    std::vector<double> probe_vector(2,0);
                     double max_angle = 0.0;
-                    int index_container_index = 0;
+                    double probe_angle;
+                    convex_index.push_back(0);  // initialize the second point
+                    for (int j=0; i<neighbor_num_in_range[i]; j++) {
+                        if (j == convex_index[0]) {
+                            // jump over this point, it's itself
+                            continue;
+                        }
+                        base_vector[0] = 0.0;
+                        base_vector[1] = -1.0;
+                        probe_vector[0] = pos_x[j] - pos_x[convex_index[0]];
+                        probe_vector[1] = pos_y[j] - pos_y[convex_index[0]];
+                        probe_angle = acos((base_vector[0]*probe_vector[0] + base_vector[1]*probe_vector[1])
+                            / sqrt(pow(probe_vector[0],2)+pow(probe_vector[1],2)));
+                        if (probe_angle > max_angle) {
+                            max_angle = probe_angle;
+                            convex_index[1] = j;  // update the second point
+                        }
+                    }
 
+                    // continue find the rest convex points
+                    // the only difference with finding the first one is the base_vector
+                    int convex_index_index = 1;  // current index of convex_index
+                    int convex_index_next = convex_index[1];  // so that it's not equal to the first index
+                    while (convex_index_next != convex_index[0]) {
+                        // next convex index not equal to first index, convex not closed
+                        max_angle = 0.0;
+                        convex_index.push_back(0);  // initialize the next index
+                        base_vector[0] = pos_x[convex_index[convex_index_index-1]]
+                            - pos_x[convex_index[convex_index_index]];
+                        base_vector[1] = pos_y[convex_index[convex_index_index-1]]
+                            - pos_y[convex_index[convex_index_index]];
+                        for (int j=0; j<neighbor_num_in_range[i]; j++) {
+                            if (j == convex_index[convex_index_index]) {
+                                // exclude itself
+                                continue;
+                            }
+                            probe_vector[0] = pos_x[j] - pos_x[convex_index[convex_index_index]];
+                            probe_vector[1] = pos_y[j] - pos_y[convex_index[convex_index_index]];
+                            probe_angle = acos((base_vector[0]*probe_vector[0] + base_vector[1]*probe_vector[1])
+                                / sqrt(pow(base_vector[0],2)+pow(base_vector[1],2))
+                                / sqrt(pow(probe_vector[0],2)+pow(probe_vector[1],2)));
+                            if (probe_angle > max_angle) {
+                                max_angle = probe_angle;
+                                convex_index[convex_index_index+1] = j;  // update next convex index
+                            }
+                        }
+                        convex_index_next = convex_index[convex_index_index+1];  // the found index
+                        convex_index_index = convex_index_index + 1;
+                    }
+                    // if here, then the convex if closed
+                    // the last index is equal to the first index of convex_index
+                    convex_index.pop_back();  // delete the repeated index
 
+                    // find the minimum covering circle based on the convex hull
+                    std::vector<int> circle_points_index;  // contain the index of the points of the circle
+                    // possible two points connecting the diameter, or three points on the icrcle
+                    // start with a random side of the convex
+                    int side_index[2] = {0,1};  // the first side of the convex, they are index of convex_index
+                    double vector_1[2], vector_2[2];  // vectors for computing angle
+                    while (true) {
+                        // find the smallest angle subtended the side
+                        double smallest_angle = M_PI;
+                        double subtended_angle;
+                        // int convex_index_index;  // change role to the vertex subtend the side
+                        for (int j=0; j<convex_index.size(); j++) {
+                            if (j == side_index[0] || j == side_index[1]) {
+                                // exclude the vertices from the side
+                                continue;
+                            }
+                            vector_1[0] = pos_x[convex_index[side_index[0]]] - pos_x[convex_index[j]];
+                            vector_1[1] = pos_y[convex_index[side_index[0]]] - pos_y[convex_index[j]];
+                            vector_2[0] = pos_x[convex_index[side_index[1]]] - pos_x[convex_index[j]];
+                            vector_2[1] = pos_y[convex_index[side_index[1]]] - pos_y[convex_index[j]];
+                            subtended_angle = acos((vector_1[0]*vector_2[0]+vector_1[1]*vector_2[1])
+                                / sqrt(pow(vector_1[0],2)+pow(vector_1[1],2))
+                                / sqrt(pow(vector_2[0],2)+pow(vector_2[1],2)));
+                            if (subtended_angle < smallest_angle) {
+                                smallest_angle = subtended_angle;
+                                convex_index_index = j;
+                            }
+                        }
+                        if (smallest_angle >= M_PI/2) {
+                            // return the side as the diameter of the circle
+                            circle_points_index.resize(2);
+                            circle_points_index[0] = convex_index[side_index[0]];
+                            circle_points_index[1] = convex_index[side_index[1]];
+                            break;
+                        }
+                        else {
+                            // check the other two angles of the triangle from the side and vertex
+                            // continue new iteration if one angle is obtuse
+                            // check the angle at vertex side_index[0]
+                            vector_1[0] = pos_x[convex_index[convex_index_index]]
+                                - pos_x[convex_index[side_index[0]]];
+                            vector_1[1] = pos_y[convex_index[convex_index_index]]
+                                - pos_y[convex_index[side_index[0]]];
+                            vector_2[0] = pos_x[convex_index[side_index[1]]]
+                                - pos_x[convex_index[side_index[0]]];
+                            vector_2[1] = pos_y[convex_index[side_index[1]]]
+                                - pos_y[convex_index[side_index[0]]];
+                            subtended_angle = acos((vector_1[0]*vector_2[0]+vector_1[1]*vector_2[1])
+                                / sqrt(pow(vector_1[0],2)+pow(vector_1[1],2))
+                                / sqrt(pow(vector_2[0],2)+pow(vector_2[1],2)));
+                            if (subtended_angle > M_PI/2) {
+                                // continue new iteration with the subtended side
+                                side_index[0] = convex_index_index;
+                                continue;
+                            }
+                            // check the angle at vertex side_index[1]
+                            vector_1[0] = pos_x[convex_index[convex_index_index]]
+                                - pos_x[convex_index[side_index[1]]];
+                            vector_1[1] = pos_y[convex_index[convex_index_index]]
+                                - pos_y[convex_index[side_index[1]]];
+                            vector_2[0] = pos_x[convex_index[side_index[0]]]
+                                - pos_x[convex_index[side_index[1]]];
+                            vector_2[1] = pos_y[convex_index[side_index[0]]]
+                                - pos_y[convex_index[side_index[1]]];
+                            subtended_angle = acos((vector_1[0]*vector_2[0]+vector_1[1]*vector_2[1])
+                                / sqrt(pow(vector_1[0],2)+pow(vector_1[1],2))
+                                / sqrt(pow(vector_2[0],2)+pow(vector_2[1],2)));
+                            if (subtended_angle > M_PI/2) {
+                                // continue new iteration with the subtended side
+                                side_index[1] = convex_index_index;
+                                continue;
+                            }
+                            // if here, no vertice are obtuse
+                            // return the three points that the circle passes
+                            circle_points_index.resize(3);
+                            circle_points_index[0] = convex_index[side_index[0]];
+                            circle_points_index[1] = convex_index[side_index[1]];
+                            circle_points_index[2] = convex_index[convex_index_index];
+                            break;
+                        }
+                    }
 
+                    // the points for the circle are found
+                    // calculate circle center based on circle type
+                    if (circle_points_index.size() == 2) {
+                        // two points connecting the diameter of the circle
+                        int ii[2] = {circle_points_index[0],circle_points_index[1]};
+                        circle_center[0] = (pos_x[ii[0]] + pos_x[ii[1]])/2;
+                        circle_center[1] = (pos_y[ii[0]] + pos_y[ii[1]])/2;
+                    }
+                    else if (circle_points_index.size() == 3) {
+                        // three points the circle passes
+                        int iii[3] = {circle_points_index[0],circle_points_index[1],circle_points_index[2]};
+                        double y_delta_a = pos_y[iii[1]] - pos_y[iii[0]];
+                        double x_delta_a = pos_x[iii[1]] - pos_x[iii[0]];
+                        double y_delta_b = pos_y[iii[2]] - pos_y[iii[1]];
+                        double x_delta_b = pos_x[iii[2]] - pos_x[iii[1]];
+                        double a_slope = y_delta_a/x_delta_a;
+                        double b_slope = y_delta_b/x_delta_b;
+                        circle_center[0] = (a_slope*b_slope*(pos_y[iii[0]]-pos_y[iii[2]])
+                            + b_slope*(pos_x[iii[0]]+pos_x[iii[1]]) - a_slope*(pos_x[iii[1]]+pos_x[iii[2]]))
+                            / (2*(b_slope-a_slope));
+                        circle_center[1] = -1.0*(circle_center[0] - (pos_x[iii[0]]+pos_x[iii[1]])/2)/a_slope
+                            + (pos_y[iii[0]]+pos_y[iii[1]])/2;
+                    }
+
+                    // calculate the feedback vector according to the circle center
+                    driving_feedback_vector[i][0] = circle_center[0] - current_robots.x[i];
+                    driving_feedback_vector[i][1] = circle_center[1] - current_robots.y[i];
                 }
             }
 
-
-
-
-
-
-
-
-
-
-
-
-
+            ///////////////////////////////////////////////////////////
+            // core algorithm, find minimum covering circle, end here
+            ///////////////////////////////////////////////////////////
 
             // 6.calculate collision feedback vector from in spring range neighbors
             double collision_feedback_vector[robot_quantity][2];
