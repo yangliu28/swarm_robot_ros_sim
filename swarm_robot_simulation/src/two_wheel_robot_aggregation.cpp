@@ -26,7 +26,9 @@
     // robot quantity smaller than 20, may stabilize on neighbor number of 2, will not exit
 
 // replace the geometric center with center of minimum covering circle (07/11/2016)
-
+// the algorithm has been tested in matlab, see "minimum_covering_circle.m"
+// the method is first generate convex hull of all neighbors using gift wrappign algorithm
+// then find the minimum covering circle using the convex hull
 
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
@@ -347,11 +349,12 @@ int main(int argc, char **argv) {
                     double max_angle = 0.0;
                     double probe_angle;
                     convex_index.push_back(0);  // initialize the second point
-                    for (int j=0; i<neighbor_num_in_range[i]; j++) {
+                    for (int j=0; j<neighbor_num_in_range[i]; j++) {
                         if (j == convex_index[0]) {
                             // jump over this point, it's itself
                             continue;
                         }
+                        // ROS_INFO("program goes here: 5.2");
                         base_vector[0] = 0.0;
                         base_vector[1] = -1.0;
                         probe_vector[0] = pos_x[j] - pos_x[convex_index[0]];
