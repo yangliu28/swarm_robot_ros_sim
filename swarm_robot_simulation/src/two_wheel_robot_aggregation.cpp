@@ -25,12 +25,14 @@
     // isolated group of robots>3, minimal neighbor number is 3, will exit
     // robot quantity smaller than 20, may stabilize on neighbor number of 2, will not exit
 
-// replace the geometric center with center of minimum covering circle (07/10/2016)
+// replace the geometric center with center of minimum covering circle (07/11/2016)
+
 
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
 #include <gazebo_msgs/SetJointProperties.h>
 #include <math.h>
+#include <vector>
 
 #include <iostream>  // debug
 #include <iomanip>
@@ -290,11 +292,79 @@ int main(int argc, char **argv) {
             }
 
             // 5.calculate driving feedback vector based on minimum covering circle of in-range neighbors
-            // double driving_feedback_vector[robot_quantity][2];
-            // double geometric_center[2];
-            // for (int i=0; i<robot_quantity; i++) {
-            //     //
-            // }
+            double driving_feedback_vector[robot_quantity][2];
+            double circle_center[2];  // center of minimum covering circle
+            // prepare the neighbor positions in an easy to use dataset
+            std::vector<double> pos_x, pos_y;
+            std::vector<int> convex_index;
+            for (int i=0; i<robot_quantity; i++) {
+                // discuss base on different number of neighbor robots
+                if (neighbor_num_in_range[i] == 0) {
+                    // 0 neighbors in range, isolated, feedback vector zero
+                    driving_feedback_vector[i][0] = 0.0;
+                    driving_feedback_vector[i][1] = 0.0;
+                }
+                else if (neighbor_num_in_range[i] == 1) {
+                    // 1 neighbor, feedback vector pointing to this robot
+                    driving_feedback_vector[i][0] = current_robots.x[index_sort[i][1]] - current_robots.x[i];
+                    driving_feedback_vector[i][1] = current_robots.y[index_sort[i][1]] - current_robots.y[i];
+                }
+                else if (neighbor_num_in_range[i] == 2) {
+                    // 2 neighbor, feedback vector pointing to middle point of the two
+                    circle_center[0] = (current_robots.x[index_sort[i][1]]
+                        + current_robots.x[index_sort[i][2]])/2.0;
+                    circle_center[1] = (current_robots.y[index_sort[i][1]]
+                        + current_robots.y[index_sort[i][2]])/2.0;
+                    driving_feedback_vector[i][0] = circle_center[0] - current_robots.x[i];
+                    driving_feedback_vector[i][1] = circle_center[1] - current_robots.y[i];
+                }
+                else {
+                    // 3 or more neighbors, prepare dataset for this situation
+                    pos_x.resize(neighbor_num_in_range[i]);
+                    pos_y.resize(neighbor_num_in_range[i]);
+                    convex_index.clear();  // index of the pos_x, pos_y
+                    for (int j=1; j<neighbor_num_in_range[i]+1; j++) {
+                        pos_x[j-1] = current_robots.x[index_sort[i][j]];
+                        pos_y[j-1] = current_robots.y[index_sort[i][j]];
+                    }
+
+                    // find the leftmost robot as the starting point of the convex hull
+                    // leftmost robot will always be on the convex hull
+                    convex_index.push_back(0);  // initialize the first robot position as leftmost
+                    for (int j=1; j<neighbor_num_in_range[i]; j++) {
+                        if (pos_x[j] < pos_x[convex_index[0]]) {
+                            convex_index[0] = j;
+                        }
+                    }
+
+                    // find second point on the convex hull
+                    std::vector<int> index_container;  // index for the robots in pos_x, pos_y
+                    // find the next point only in this container
+                    index_container.resize(neighbor_num_in_range[i]);
+                    for (int j=0; j<neighbor_num_in_range[i]; j++)
+                        index_container[j] = j;
+                    // not necessary to delete the index of the leftmost robot from the container
+                    // it will be available for searching so the convex hull can be closed
+                    double max_angle = 0.0;
+                    int index_container_index = 0;
+
+
+
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             // 6.calculate collision feedback vector from in spring range neighbors
             double collision_feedback_vector[robot_quantity][2];

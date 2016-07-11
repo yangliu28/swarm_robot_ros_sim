@@ -17,6 +17,10 @@ function minimum_covering_circle(robot_quantity, half_range)
 % although it can be modified so that it is compatible with robot quantity of 2 or 1
 % or multiple robots at the same line, it has no such mechanism temperarily
 
+% demo test:
+% minimum_covering_circle(20,0.5)
+% minimum_covering_circle(100,1.0)
+
 % randomly generate the dataset
 pd = makedist('uniform','lower',-half_range,'upper',half_range);
 position=random(pd,robot_quantity,2);  % 2d positions
@@ -30,47 +34,44 @@ for i=2:robot_quantity
 end
 
 % find second point on the convex hull
-index_container = 1:1:robot_quantity;  % only find the next in this container
-% keey this dot in the container, so it can be found as next dot
-% index_container(convex_index(1))=[];  % delete the index of first point
 max_angle = 0;
-index_container_index = 1;
-for i=1:length(index_container)
+for i=1:length(position)
+    if i == convex_index(1)
+        % jump over this point, it's itself
+        continue;
+    end
     base_vector = [0,-1];
-    probe_vector = position(index_container(i),:)-position(convex_index(1),:);
+    probe_vector = position(i,:) - position(convex_index(1),:);
     probe_angle = acos(dot(base_vector,probe_vector)/norm(probe_vector));
     if probe_angle > max_angle
         max_angle = probe_angle;
-        convex_index(2) = index_container(i);
-        index_container_index = i;
+        convex_index(2) = i;  % the second point
     end
 end
-% delete the found index from the container
-index_container(index_container_index)=[];
 
 % find the rest convex points base on the first convex segment
+% the only difference with finding the first one is the base_vector
 convex_index_index = 2;  % current index of convex_index
-convex_index_next = index_container(1);  % there should be at least 3 dots
+convex_index_next = convex_index(2);  % so that it's not equal to  first index
 while (convex_index_next ~= convex_index(1))
     % next convex index is not equal to the first convex index
-    index_container_index = 1;
     max_angle = 0;
     base_vector = position(convex_index(convex_index_index-1),:) -...
         position(convex_index(convex_index_index),:);
-    for i=1:length(index_container)
-        probe_vector = position(index_container(i),:) -...
-            position(convex_index(convex_index_index),:);
+    for i=1:length(position)
+        if i == convex_index(convex_index_index)
+            % exclude itself
+            continue;
+        end
+        probe_vector = position(i,:) - position(convex_index(convex_index_index),:);
         probe_angle = acos(dot(base_vector,probe_vector)/norm(base_vector)/norm(probe_vector));
         if probe_angle > max_angle
             max_angle = probe_angle;
-            convex_index(convex_index_index+1) = index_container(i);
-            index_container_index = i;
+            convex_index(convex_index_index+1) = i;  % update the next convex index
         end
     end
-    % delete the found index from the container
-    index_container(index_container_index)=[];
     convex_index_next = convex_index(convex_index_index+1);  % the found index
-    convex_index_index = convex_index_index+1;  % increment index by 1
+    convex_index_index = convex_index_index+1;  % increment index of convex_index by 1
 end
 % if here then the convex is closed
 % the last index is equal to the first index of convex_index
@@ -189,7 +190,7 @@ rectangle('Position',[circle_center(1)-circle_radius,circle_center(2)-circle_rad
     circle_radius*2,circle_radius*2],'Curvature',[1,1]);
 axis equal;
 
-% display circle center and radius
+% display computation result of circle center and radius
 circle_center
 circle_radius
 
