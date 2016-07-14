@@ -33,7 +33,7 @@
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
 #include <gazebo_msgs/SetJointProperties.h>
-#include <math.h>
+#include <cmath>
 #include <vector>
 
 #include <iostream>  // debug
@@ -258,10 +258,21 @@ int main(int argc, char **argv) {
             // print out number of neighbors in sensing range and spring range
             if (print_debug_msg) {
                 std::cout << "number of neighbors in sensing range and spring range:" << std::endl;
-                for (int i=0; i<robot_quantity; i++) {
-                    std::cout << std::setw(5) << current_robots.index[i]
+                // print multiple colomns in the terminal
+                int colomn_count = -1;  // increment by 1 first thing in the loop
+                int i=0;  // robot count
+                while (i < robot_quantity) {
+                    // colomn control
+                    colomn_count = colomn_count + 1;
+                    if (colomn_count == 3) {
+                        colomn_count = 0;
+                        std::cout << std::endl;
+                    }
+                    // print message
+                    std::cout << std::setw(10) << current_robots.index[i]
                         << std::setw(5) << neighbor_num_in_range[i]
-                        << std::setw(5) << neighbor_num_in_spring[i] << std::endl;
+                        << std::setw(5) << neighbor_num_in_spring[i];
+                    i = i + 1;
                 }
                 std::cout << std::endl;
             }

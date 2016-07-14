@@ -22,7 +22,7 @@
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
 #include <gazebo_msgs/SetJointProperties.h>
-#include <math.h>
+#include <cmath>
 
 #include <iostream>  // debug
 #include <iomanip>

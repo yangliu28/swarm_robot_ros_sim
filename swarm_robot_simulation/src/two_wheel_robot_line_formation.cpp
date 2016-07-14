@@ -17,7 +17,7 @@
 #include <ros/ros.h>
 #include <swarm_robot_msg/two_wheel_robot.h>
 #include <gazebo_msgs/SetJointProperties.h>
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include <numeric>
 #include <vector>
@@ -56,11 +56,11 @@ std::string intToString(int a) {
     return ss.str();
 }
 
-// return sign of a number
+// return sign of a number, used to decide relative position of a point and a line
+// if point on the line(x=0), return positive side
 int getSign(double x) {
-    if (x > 0) return 1;
-    if (x < 0) return -1;
-    return 0;
+    if (x >= 0) return 1;
+    else return -1;
 }
 
 // linear fitting function, revised from C++11 implementation
@@ -246,9 +246,20 @@ int main(int argc, char **argv) {
             // print out number of neighbors in sensing range
             if (print_debug_msg) {
                 std::cout << "number of neighbors in sensing range" << std::endl;
-                for (int i=0; i<robot_quantity; i++) {
-                    std::cout << std::setw(5) << current_robots.index[i]
-                        << std::setw(15) << neighbor_num_in_range[i] << std::endl;
+                // print multiple colomns in the terminal
+                int colomn_count = -1;  // increment by 1 first thing in the loop
+                int i=0;  // robot count
+                while (i < robot_quantity) {
+                    // colomn control
+                    colomn_count = colomn_count + 1;
+                    if (colomn_count == 4) {
+                        colomn_count = 0;
+                        std::cout << std::endl;
+                    }
+                    // print message
+                    std::cout << std::setw(10) << current_robots.index[i]
+                        << std::setw(5) << neighbor_num_in_range[i];
+                    i = i + 1;
                 }
                 std::cout << std::endl;
             }
@@ -286,10 +297,10 @@ int main(int argc, char **argv) {
                     + fitting_result[i][1] - current_robots.y[i]);
             }
 
-            // 6.find adjacent neighbors for distance feedback in parallel direction
+            // 6.find adjacent neighbors in sensing range for distance feedback in parallel direction
             // rules are:
                 // only two neighbors are needed for distance feedback, one on left, one on right
-                // left and right are tell by facing the fitted line from the robot position
+                // left and right are distinguished by facing the fitted line from the robot position
                 // the chosen robots have smallest projected distance (on the line) at both sides
                 // if no robots are on left or right, then leave it empty
             // the projected distance of left and right neighbors
@@ -304,7 +315,7 @@ int main(int argc, char **argv) {
                 // getSign(kx+b-y)
                 fitted_line_side[i] = getSign(fitting_result[i][0]*current_robots.x[i]
                     + fitting_result[i][1] - current_robots.y[i]);
-                for (int j=1; j<neighbor_num_in_range[j]+1; j++) {
+                for (int j=1; j<neighbor_num_in_range[i]+1; j++) {
                     // calculate the signed distance, left is negative, right is positive
                     signed_distance_temp = (double)fitted_line_side[i] / sqrt(1+pow(fitting_result[i][0], 2))
                         * (fitting_result[i][0]*(current_robots.y[index_sort[i][j]]-current_robots.y[i])
