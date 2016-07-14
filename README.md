@@ -6,6 +6,8 @@ This project starts after investigating several swarm robot platforms like Kilob
 
 Current research topic is decentrized formation control.
 
+Other interests are Braitenberg vehicle, collective move, dealing with obstacles and closed environment, etc.
+
 ## What's inside
 *swarm_robot_ros_sim* contains packages each of which features a set of functionalities for this simulation platform:
 
