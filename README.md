@@ -46,7 +46,7 @@ Optionally, in all previous tests, robots can be added or deleted through:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rosservice call /swarm_sim/two_wheel_robot_update (press tab)...`
 
 ## Why not ROS Stage
-Some swarm robot research model the robot as a dot, like ROS Stage. In my idea, there is distinct difference between omnidirectional move of dot robot and complete robot model. Here we use full model of the real robots to bridge the gap between simulation and implementation. Although it has drawback that the simulation speed goes low when more than 100 of such complex robots are in Gazebo, we will try to overcome that.
+Some swarm robot research model the robot as a dot, like ROS Stage. In my idea, there is distinct difference between omnidirectional move of a dot robot and a complete robot model. Here we use full model (simplify the collision) of the real robots to bridge the gap between simulation and implementation. Although it has drawback that the simulation speed goes low when more than 100 of such complex robots are in Gazebo, we will try to overcome that.
 
 ## Contribution
 
