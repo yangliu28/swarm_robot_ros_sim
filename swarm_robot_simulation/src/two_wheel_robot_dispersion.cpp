@@ -2,6 +2,12 @@
 
 // this is the first simulation program written for two wheel robots
 
+// one way to improve the time efficiency is curve the velocity ratio for different feedback
+    // in current algorithm, velocity is proportional to the feedback 
+    // the robot tends to move too slow, better to speed it up
+    // and it's not necessary to move too fast when feedback is large
+// we still stick to the proportional model because it's simpler and cleaner
+
 // dispersion algorithm explanation:
 // This simulation uses the force feedback from a spring model to control the speed and moving direction
 // of the robots. The key is to decide which robots will be the neighbors. In the sensing range of one
