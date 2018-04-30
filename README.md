@@ -1,7 +1,9 @@
 # swarm_robot_ros_sim
 A swarm robot simulation environment for ROS to be used with Gazebo.
 
-(Please also check out new swarm robot repository featuring consensus and formation algorithms. [swarm_formation_sim](https://github.com/yangliu28/swarm_formation_sim.git))
+<sub>(Please also check out my new swarm robot simulations featuring consensus and formation algorithms.)</sub>
+
+<sub>[https://github.com/yangliu28/swarm_formation_sim](https://github.com/yangliu28/swarm_formation_sim)</sub>
 
 ## Motivation
 This project starts after investigating several swarm robot platforms like Kilobot, E-puck, Jasmine, Alice, etc, and working on a novel swarm microrobot called [Inchbot](http://www.case.edu/mae/robotics/#modular) for a while. It would be interesting to see what these swarm microrobots can do as a collective under simulation environment like ROS. This simulation aims to be a general swarm robots simulation platform.
