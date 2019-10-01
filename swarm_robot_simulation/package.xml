@@ -42,12 +42,14 @@
   <buildtool_depend>catkin_simple</buildtool_depend>
   <build_depend>roscpp</build_depend>
 <build_depend>std_msgs</build_depend>
-<build_depend>swarm_robot_msgs</build_depend>
-<build_depend>swarm_robot_action</build_depend>
+  <build_depend>swarm_robot_msg</build_depend>
+  <build_depend>swarm_robot_srv</build_depend>
+  <build_depend>swarm_robot_action</build_depend>
   <run_depend>roscpp</run_depend>
 <run_depend>std_msgs</run_depend>
 <run_depend>swarm_robot_msgs</run_depend>
 <run_depend>swarm_robot_action</run_depend>
+<run_depend>swarm_robot_srv</run_depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- You can specify that this package is a metapackage here: -->
