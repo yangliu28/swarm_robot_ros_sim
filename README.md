@@ -25,6 +25,7 @@ Other interests are Braitenberg vehicle, collective move, dealing with obstacles
 
 ## Setup
 Have ROS Indigo installed and workspace setup. Clone this package in ~/ros_ws/src and build with catkin_make.
+Make sure you clone https://github.com/catkin/catkin_simple.git in ~/ros_ws/src before build with catkin_make.
 
 ## Demo
 Two wheel robot dispersion simulation:
